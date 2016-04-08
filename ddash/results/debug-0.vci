@@ -1,0 +1,53 @@
+                                                                
+version 2
+run debug-0-20160407-21:52:06-23127
+attr configname debug
+attr datetime 20160407-21:52:06
+attr experiment debug
+attr inifile omnetpp.ini
+attr iterationvars ""
+attr iterationvars2 $repetition=0
+attr measurement ""
+attr network DDashNetwork
+attr processid 23127
+attr repetition 0
+attr replication #0
+attr resultdir results
+attr runnumber 0
+attr seedset 0
+
+vector 26  DDashNetwork.node[0].veinsmobility  posx  ETV
+vector 27  DDashNetwork.node[0].veinsmobility  posy  ETV
+vector 28  DDashNetwork.node[0].veinsmobility  speed  ETV
+vector 29  DDashNetwork.node[0].veinsmobility  acceleration  ETV
+vector 30  DDashNetwork.node[0].veinsmobility  co2emission  ETV
+vector 33  DDashNetwork.node[1].veinsmobility  posx  ETV
+vector 34  DDashNetwork.node[1].veinsmobility  posy  ETV
+vector 35  DDashNetwork.node[1].veinsmobility  speed  ETV
+vector 36  DDashNetwork.node[1].veinsmobility  acceleration  ETV
+vector 37  DDashNetwork.node[1].veinsmobility  co2emission  ETV
+vector 40  DDashNetwork.node[2].veinsmobility  posx  ETV
+vector 41  DDashNetwork.node[2].veinsmobility  posy  ETV
+vector 42  DDashNetwork.node[2].veinsmobility  speed  ETV
+vector 43  DDashNetwork.node[2].veinsmobility  acceleration  ETV
+vector 44  DDashNetwork.node[2].veinsmobility  co2emission  ETV
+30	1267 15896 148 748 10.3 70.3 601 0.973 4.8009602671475 1341.3524439246 3592.7611596636
+29	17163 17410 148 748 10.3 70.3 601 -3.4676726585124 0.79838075777516 148.94981307158 506.87640438005
+28	34573 16866 147 748 10.2 70.3 602 0.00047834328705249 14.973445357345 3744.1079192158 35456.152359663
+27	51439 14363 146 748 10.1 70.3 603 126.65 223.35 99291.637413394 17224554.730497
+26	65802 13817 146 748 10.1 70.3 603 26.65 123.35 49826.506318143 5194378.8295089
+vector 47  DDashNetwork.node[3].veinsmobility  posx  ETV
+vector 48  DDashNetwork.node[3].veinsmobility  posy  ETV
+vector 49  DDashNetwork.node[3].veinsmobility  speed  ETV
+vector 50  DDashNetwork.node[3].veinsmobility  acceleration  ETV
+vector 51  DDashNetwork.node[3].veinsmobility  co2emission  ETV
+37	79920 13581 348 856 30.3 81.1 509 0.973 4.8216331504569 1143.6960231424 2975.3835262835
+36	93501 14676 348 856 30.3 81.1 509 -3.3006470810242 0.7999778598547 148.87051348787 341.97796594673
+35	108177 14158 347 856 30.2 81.1 510 0.077721526382491 14.999944665805 3736.2941364907 38809.077334355
+34	122335 12407 346 856 30.1 81.1 511 126.65 223.35 84707.998439797 14793770.106121
+33	134742 11387 346 856 30.1 81.1 511 26.65 123.35 29296.228575386 2403220.5309092
+44	146129 10262 548 918 50.3 87.3 371 0.973 4.7683671217626 910.83921282324 2510.4804571413
+43	156391 10771 548 918 50.3 87.3 371 -0.34334329050035 0.79891871428117 146.20098544381 96.815430167878
+42	167162 10318 547 918 50.2 87.3 372 0.078354510338977 14.732764721329 3740.079062517 46322.862250312
+41	177480 9139 546 918 50.1 87.3 373 126.65 223.35 66667.965686781 12426537.455734
+40	186619 8140 546 918 50.1 87.3 373 26.65 123.35 22767.022517762 1969021.1949827

@@ -1,0 +1,7 @@
+<additional>
+    <taz id="swTaz" edges="0/0to0/1"/>
+    <taz id="seTaz" edges="2/0to1/0"/>
+    <taz id="nwTaz" edges="0/2to1/2"/>
+    <taz id="neTaz" edges="2/2to2/1"/>
+</additional>
+

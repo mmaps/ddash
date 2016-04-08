@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<!-- debug config -->
+<launch>
+	<copy file="ddash.net.xml" />
+	<copy file="ddash.rou.xml" />
+	<copy file="ddash.poly.xml" />
+	<copy file="ddash.sumo.cfg" type="config" />
+</launch>
+
