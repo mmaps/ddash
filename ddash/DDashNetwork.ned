@@ -26,7 +26,7 @@ network DDashNetwork extends Scenario
 			}
     submodules:
         rsu[12]: RSUDdash {
-            @display("p=150,140;b=10,10,oval");
+            @display("p=0,0 ;b=10,10,oval");
         }
     connections:
     	rsu[0].nicGate++ <--> gChannel <--> rsu[1].nicGate++;

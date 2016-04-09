@@ -13,6 +13,22 @@ void DDashRSU11p::initialize(int stage) {
 		ASSERT(annotations);
 		sentMessage = false;
 	}
+
+    cMessage *msg = new cMessage("TEST");
+    int n = this->getParentModule()->gateSize("nicGate");
+    std::cout<<"N: "<<n<<endl;
+
+    for(int i=0; i<n; i++){
+       cMessage *copy = msg->dup();
+       cGate *gate = this->getParentModule()->getSubmodule("geoNic")->gateHalf("nicGate", cGate::OUTPUT, i);
+       send(copy, gate);
+    }
+
+	std::vector<const char*> names = this->getParentModule()->getGateNames();
+	for(std::vector<const char*>::iterator it=names.begin(); it!=names.end(); ++it) {
+	    std::cout<<*it<<endl;
+	}
+
 }
 
 void DDashRSU11p::onBeacon(WaveShortMessage* wsm) {

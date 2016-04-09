@@ -49,3 +49,6 @@ examples/**/valgrind.out
 *.exe
 *.out
 *.app
+
+# Added by Mike
+ddash/results/*

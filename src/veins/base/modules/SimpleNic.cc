@@ -24,12 +24,7 @@ protected:
 Define_Module(SimpleNic);
 
 void SimpleNic::initialize() {
-    cMessage *msg = new cMessage("tictocMsg");
-    int n = gateSize("nicGate");
-    for(int i=0; i<n; i++){
-        cMessage *copy = msg->dup();
-       send(copy, "nicGate$o", i);
-    }
+
 }
 
 void SimpleNic::handleMessage(cMessage *msg) {
