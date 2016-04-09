@@ -1,8 +1,11 @@
 #include "veins/modules/application/ddash/DDashRSU11p.h"
+#include "veins/base/messages/InterGeo_m.h"
 
 using Veins::AnnotationManagerAccess;
 
 Define_Module(DDashRSU11p);
+
+static bool called = false;
 
 void DDashRSU11p::initialize(int stage) {
 	BaseWaveApplLayer::initialize(stage);
@@ -16,19 +19,34 @@ void DDashRSU11p::initialize(int stage) {
 
     cMessage *msg = new cMessage("TEST");
     int n = this->getParentModule()->gateSize("nicGate");
-    std::cout<<"N: "<<n<<endl;
-
+/*
     for(int i=0; i<n; i++){
        cMessage *copy = msg->dup();
        cGate *gate = this->getParentModule()->getSubmodule("geoNic")->gateHalf("nicGate", cGate::OUTPUT, i);
-       send(copy, gate);
+       //send(copy, gate);
     }
 
 	std::vector<const char*> names = this->getParentModule()->getGateNames();
 	for(std::vector<const char*>::iterator it=names.begin(); it!=names.end(); ++it) {
 	    std::cout<<*it<<endl;
 	}
+    // Module 'getIndex()' sends the first message
+    if (getIndex() == 0 && strcmp(getName(), "street") == 0)
+    {
+        // Boot the process scheduling the initial message as a self-message.
+        EV << "get name: " << getName() << "\n";
+        TicTocMsg1 *msg = generateMessage();
+        scheduleAt(0.0, msg);
+    }
+    */
+    if(this->getParentModule()->getIndex() == 1 && !called) {
+        called = true;
+        InterGeo *copy = new InterGeo("INIT");
+        cGate *gate = this->getParentModule()->getSubmodule("geoNic")->gateHalf("nicGate", cGate::OUTPUT, 0);
+        send(copy, gate);
+        std::cout << "Sending" << endl;
 
+    }
 }
 
 void DDashRSU11p::onBeacon(WaveShortMessage* wsm) {
