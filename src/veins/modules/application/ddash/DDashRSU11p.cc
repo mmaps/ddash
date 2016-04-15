@@ -15,6 +15,13 @@ void DDashRSU11p::initialize(int stage) {
 		annotations = AnnotationManagerAccess().getIfExists();
 		ASSERT(annotations);
 		sentMessage = false;
+	    //simulate asynchronous channel access
+	    double maxOffset = par("maxOffset").doubleValue();
+	            double offSet = dblrand() * (par("beaconInterval").doubleValue()/2);
+	            offSet = offSet + floor(offSet/0.050)*0.050;
+	            individualOffset = dblrand() * maxOffset;
+	    heartbeat = new cMessage("heartbeat", SEND_BEACON_EVT);
+	    scheduleAt(simTime() + offSet, heartbeat);
 	}
 
     cMessage *msg = new cMessage("TEST");
@@ -47,10 +54,17 @@ void DDashRSU11p::initialize(int stage) {
         std::cout << "Sending" << endl;
 
     }
+
+
 }
 
 void DDashRSU11p::onBeacon(WaveShortMessage* wsm) {
+    if(flashOn) {
+        findHost()->getDisplayString().updateWith("r=16,green");
 
+    } else {
+        findHost()->getDisplayString().updateWith("r=16,red");
+    }
 }
 
 void DDashRSU11p::onData(WaveShortMessage* wsm) {

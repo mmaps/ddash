@@ -24,15 +24,12 @@ class DDash11p : public BaseWaveApplLayer {
 		AnnotationManager* annotations;
 		simtime_t lastDroveAt;
 		bool sentMessage;
-		bool isParking;
-		bool sendWhileParking;
-		static const simsignalwrap_t parkingStateChangedSignal;
+		bool flashOn;
 	protected:
 		virtual void onBeacon(WaveShortMessage* wsm);
 		virtual void onData(WaveShortMessage* wsm);
 		void sendMessage(std::string blockedRoadId);
 		virtual void handlePositionUpdate(cObject* obj);
-		virtual void handleParkingUpdate(cObject* obj);
 		virtual void sendWSM(WaveShortMessage* wsm);
 };
 
