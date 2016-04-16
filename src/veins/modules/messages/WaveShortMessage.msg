@@ -20,6 +20,9 @@
 
 cplusplus {{
 #include "veins/base/utils/Coord.h"
+#include "src/veins/modules/messages/WaveShortMessage_m.h"
+#include <map>
+typedef std::map<std::string, int> NodeMap;
 }}
 
 class noncobject Coord;
@@ -43,6 +46,9 @@ packet WaveShortMessage {
 	int wsmLength;
 	//Data of Wave Short Message
 	string wsmData = "Some Data";
+
+	//DDash Node Map
+	NodeMap nodeMap;
 
 	int senderAddress = 0;
 	int recipientAddress = -1;
