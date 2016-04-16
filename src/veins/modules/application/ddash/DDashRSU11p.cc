@@ -21,6 +21,7 @@ void DDashRSU11p::initialize(int stage) {
 	            offSet = offSet + floor(offSet/0.050)*0.050;
 	            individualOffset = dblrand() * maxOffset;
 	    heartbeat = new cMessage("heartbeat", SEND_BEACON_EVT);
+
 	    scheduleAt(simTime() + offSet, heartbeat);
 	}
 
@@ -59,6 +60,7 @@ void DDashRSU11p::initialize(int stage) {
 }
 
 void DDashRSU11p::onBeacon(WaveShortMessage* wsm) {
+
     if(flashOn) {
         findHost()->getDisplayString().updateWith("r=16,green");
 
