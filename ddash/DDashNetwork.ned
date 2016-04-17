@@ -16,7 +16,6 @@
 //
 
 import org.car2x.veins.nodes.Scenario;
-import org.car2x.veins.nodes.RSUDdash;
 
 network DDashNetwork extends Scenario
 {
@@ -24,42 +23,5 @@ network DDashNetwork extends Scenario
 		channel gChannel extends ned.DelayChannel {
 			delay = 10ms;
 			}
-    submodules:
-        rsu[12]: RSUDdash {
-            @display("p=0,0 ;b=10,10,oval");
-        }
-    connections:
-    	rsu[0].nicGate++ <--> gChannel <--> rsu[1].nicGate++;
-    	rsu[0].nicGate++ <--> gChannel <--> rsu[2].nicGate++;
-    	rsu[0].nicGate++ <--> gChannel <--> rsu[3].nicGate++;
-    	
-    	rsu[1].nicGate++ <--> gChannel <--> rsu[3].nicGate++;
-    	rsu[1].nicGate++ <--> gChannel <--> rsu[4].nicGate++;
-    	
-    	rsu[2].nicGate++ <--> gChannel <--> rsu[5].nicGate++;
-    	rsu[2].nicGate++ <--> gChannel <--> rsu[7].nicGate++;
-    	
-    	rsu[3].nicGate++ <--> gChannel <--> rsu[5].nicGate++;
-    	rsu[3].nicGate++ <--> gChannel <--> rsu[6].nicGate++;
-    	rsu[3].nicGate++ <--> gChannel <--> rsu[8].nicGate++;
-    	
-    	rsu[4].nicGate++ <--> gChannel <--> rsu[6].nicGate++;
-    	rsu[4].nicGate++ <--> gChannel <--> rsu[9].nicGate++;
-    	
-    	rsu[5].nicGate++ <--> gChannel <--> rsu[6].nicGate++;
-    	rsu[5].nicGate++ <--> gChannel <--> rsu[7].nicGate++;
-    	rsu[5].nicGate++ <--> gChannel <--> rsu[8].nicGate++;
-    	
-    	rsu[6].nicGate++ <--> gChannel <--> rsu[8].nicGate++;
-    	rsu[6].nicGate++ <--> gChannel <--> rsu[9].nicGate++;
-    	
-    	rsu[7].nicGate++ <--> gChannel <--> rsu[10].nicGate++;
-    	
-    	rsu[8].nicGate++ <--> gChannel <--> rsu[10].nicGate++;
-    	rsu[8].nicGate++ <--> gChannel <--> rsu[11].nicGate++;
-    	
-     	rsu[9].nicGate++ <--> gChannel <--> rsu[11].nicGate++;
- 
-    	rsu[10].nicGate++ <--> gChannel <--> rsu[11].nicGate++;
 }
 

@@ -100,10 +100,10 @@ void BaseWaveApplLayer::handlePositionUpdate(cObject* obj) {
 }
 
 void BaseWaveApplLayer::handleLowerMsg(cMessage* msg) {
-
 	WaveShortMessage* wsm = dynamic_cast<WaveShortMessage*>(msg);
 	ASSERT(wsm);
 
+	/*
 	if (std::string(wsm->getName()) == "beacon") {
 		onBeacon(wsm);
 	}
@@ -112,6 +112,24 @@ void BaseWaveApplLayer::handleLowerMsg(cMessage* msg) {
 	}
 	else {
 		DBG << "unknown message (" << wsm->getName() << ")  received\n";
+	}
+    */
+	switch(msg->getKind()) {
+	case JOIN:
+	    std::cout << "RCV JOIN" << endl;
+	    onJoin(wsm);
+	    break;
+	case PING:
+	    onPing(wsm);
+	    break;
+	case PINGREQ:
+	    onPingReq(wsm);
+	    break;
+	case ACK:
+	    onAck(wsm);
+	    break;
+	default:
+	    std::cout << "ERROR kind" << endl;
 	}
 	delete(msg);
 }
@@ -150,3 +168,8 @@ void BaseWaveApplLayer::finish() {
 BaseWaveApplLayer::~BaseWaveApplLayer() {
 
 }
+
+void BaseWaveApplLayer::onJoin(WaveShortMessage* wsm){}
+void BaseWaveApplLayer::onPing(WaveShortMessage* wsm){}
+void BaseWaveApplLayer::onPingReq(WaveShortMessage* wsm){}
+void BaseWaveApplLayer::onAck(WaveShortMessage* wsm){}
