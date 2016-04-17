@@ -108,7 +108,10 @@ void DDash11p::sendJoin(){
     wsm->setKind(JOIN);
     wsm->setWsmData(mobility->getRoadId().c_str());
     sendWSM(wsm);
-    EV << "Sent JOIN!" << endl;
+    if(!sentJoinDbgMsg) {
+        debug("JOIN");
+        sentJoinDbgMsg = true;
+    }
 }
 
 void DDash11p::sendPing(){
@@ -117,34 +120,41 @@ void DDash11p::sendPing(){
     node = getNextNode();
     wsm = prepareWSM(node, beaconLengthBits, type_CCH, beaconPriority, 0, -1);
     wsm->setKind(PING);
-    //wsm->setNodeMap(nodeMap);
+    wsm->setNodeMap(nodeMap);
     wsm->setNodeList(nodeList);
+    wsm->setWsmData(getMyName().c_str());
     sendWSM(wsm);
-    std::cout << "Sent PING to " << node << endl;
+    debug("PING " + std::string(node));
 }
 
 void DDash11p::onJoin(WaveShortMessage* wsm){
     if(std::string(wsm->getWsmData()) == mobility->getRoadId()) {
-        std::cout << "A buddy on my road" << endl;
+        debug(wsm->getName() + std::string(" joins road ") + mobility->getRoadId());
         addNode(wsm->getName());
     } else {
-        std::cout << "Not my road: " << wsm->getWsmData() << " vs " << mobility->getRoadId().c_str()<< endl;
+        debug("Not my road");
     }
 }
 
 void DDash11p::onPing(WaveShortMessage* wsm){
     if(wsm->getName() == mobility->getExternalId()) {
-        std::cout << "Got a ping!" << endl;
-        NodeList list = wsm->getNodeList();
-        for(std::string name: list) {
-            std::cout << "Importing: " << name << endl;
-            if(nodeMap.find(name.c_str()) != nodeMap.end()) {
-                nodeMap[name.c_str()] = ALIVE;
-                nodeList.push_back(name);
+        debug("PINGED");
+
+        const char* sender = wsm->getWsmData();
+        if(!hasNode(sender)) {
+            debug("Sender is new: " + std::string(sender));
+            addNode(sender);
+        }
+
+        for(std::string s: wsm->getNodeList()) {
+            if(!isMyName(s) && !hasNode(s)) {
+                debug("New node " + s);
+                addNode(s.c_str());
             }
         }
+
     } else {
-        std::cout << "Ping not for me " << wsm->getName() << endl;
+        debug(std::string("Ping not for me ") + wsm->getName());
     }
 }
 
@@ -152,28 +162,29 @@ void DDash11p::onPingReq(WaveShortMessage* wsm){}
 void DDash11p::onAck(WaveShortMessage* wsm){}
 
 void DDash11p::addNode(const char* name) {
-    bool wasEmpty = nodeMap.empty();
-    std::cout << "Adding: " << name << endl;
+    debug("addNode " + std::string(name));
 
-    nodeList.push_back(std::string(name));
-
-    nodeMap[std::string(name).c_str()] = ALIVE;
-
-    if(wasEmpty) {
-        lastIdx = 0;
-        std::cout << "Init map iter " << endl;
-        mapIter = nodeMap.begin();
-        std::cout << "Init with: " << mapIter->first << endl;
+    if(nodeMap.find(std::string(name)) == nodeMap.end()) {
+        nodeList.push_back(std::string(name));
+        debug("NodeList: " + nodeList.back());
     }
+
+    nodeMap[std::string(name)] = ALIVE;
+
+    if(nodeMap.size() == 1) {
+        mapIter = nodeMap.begin();
+        lastIdx = 0;
+    }
+
+    dumpMap();
+    debug("NodeMap: " + std::string(nodeMap.find(std::string(name))->first));
 }
 
 const char* DDash11p::getNextNode() {
-    const char* name = nodeList[lastIdx].c_str();
+    const char* next = nodeList[lastIdx].c_str();
     lastIdx++;
-
     if(lastIdx == nodeMap.size()) {
         lastIdx = 0;
     }
-
-    return name;
+    return next;
 }

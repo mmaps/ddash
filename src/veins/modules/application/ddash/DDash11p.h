@@ -11,7 +11,7 @@
 using Veins::TraCIMobility;
 using Veins::TraCICommandInterface;
 using Veins::AnnotationManager;
-typedef std::map<const char*, int> NodeMap;
+typedef std::map<std::string, int> NodeMap;
 typedef std::vector<std::string> NodeList;
 
 
@@ -19,6 +19,7 @@ class DDash11p : public BaseWaveApplLayer {
 	public:
 		virtual void initialize(int stage);
 		virtual void receiveSignal(cComponent* source, simsignal_t signalID, cObject* obj);
+
 	protected:
 		TraCIMobility* mobility;
 		TraCICommandInterface* traci;
@@ -27,11 +28,13 @@ class DDash11p : public BaseWaveApplLayer {
 		simtime_t lastDroveAt;
 		bool sentMessage;
 		bool flashOn;
-        NodeMap nodeMap;
+		bool sentJoinDbgMsg = false;
         cMessage *pingMsg;
+        NodeMap nodeMap;
         NodeMap::iterator mapIter;
         NodeList nodeList;
         unsigned lastIdx;
+
 	protected:
 		virtual void onBeacon(WaveShortMessage* wsm);
 		virtual void onData(WaveShortMessage* wsm);
@@ -47,6 +50,36 @@ class DDash11p : public BaseWaveApplLayer {
         virtual void onAck(WaveShortMessage* wsm);
         const char* getNextNode();
 		void addNode(const char* name);
+
+		std::string getMyName() {
+		    return mobility->getExternalId();
+		}
+
+		bool isMyName(const char* nodeName) {
+		    return mobility->getExternalId() == std::string(nodeName);
+		}
+
+		bool isMyName(std::string nodeName) {
+		    return mobility->getExternalId() == nodeName;
+		}
+
+		bool hasNode(const char* nodeName) {
+		    return nodeMap.find(std::string(nodeName)) != nodeMap.end();
+		}
+
+		bool hasNode(std::string nodeName) {
+		    return nodeMap.find(nodeName) != nodeMap.end();
+		}
+
+		void dumpMap() {
+		    for(NodeMap::iterator it=nodeMap.begin(); it!=nodeMap.end(); ++it) {
+		        std::cout << it->first << ", ";
+		    }
+		    std::cout << endl;
+		}
+		void debug(std::string msg) {
+		    std::cout << mobility->getExternalId() + " (@ " + mobility->getRoadId() + "): " + msg << endl;
+		}
 };
 
 #endif
