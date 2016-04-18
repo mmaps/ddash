@@ -62,7 +62,8 @@ class BaseWaveApplLayer : public BaseApplLayer {
 			JOIN,
 			PING,
 			PINGREQ,
-			ACK
+			ACK,
+			LEAVE
 		};
 
 		enum NodeStatus {

@@ -26,10 +26,12 @@ class DDash11p : public BaseWaveApplLayer {
 		TraCICommandInterface::Vehicle* traciVehicle;
 		AnnotationManager* annotations;
 		simtime_t lastDroveAt;
+		simtime_t timeoutTime;
 		bool sentMessage;
 		bool flashOn;
 		bool sentJoinDbgMsg = false;
-        cMessage *pingMsg;
+		bool sentPing = false;
+        cMessage *heartbeatMsg;
         NodeMap nodeMap;
         NodeMap::iterator mapIter;
         NodeList nodeList;
@@ -51,6 +53,11 @@ class DDash11p : public BaseWaveApplLayer {
         const char* getNextNode();
 		void addNode(const char* name);
 
+		/******************************************************************
+		 *
+		 * Simple Methods. Can be made inline
+		 *
+		 ******************************************************************/
 		std::string getMyName() {
 		    return mobility->getExternalId();
 		}
@@ -71,6 +78,11 @@ class DDash11p : public BaseWaveApplLayer {
 		    return nodeMap.find(nodeName) != nodeMap.end();
 		}
 
+        /******************************************************************
+         *
+         * Debug Methods
+         *
+         ******************************************************************/
 		void dumpMap() {
 		    for(NodeMap::iterator it=nodeMap.begin(); it!=nodeMap.end(); ++it) {
 		        std::cout << it->first << ", ";
