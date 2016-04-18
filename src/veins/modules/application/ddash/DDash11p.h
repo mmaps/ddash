@@ -30,11 +30,14 @@ class DDash11p : public BaseWaveApplLayer {
 		bool sentMessage;
 		bool flashOn;
 		bool sentJoinDbgMsg = false;
-		bool sentPing = false;
+		double timeout;
+		double period;
         cMessage *heartbeatMsg;
+        cMessage *timeoutMsg;
         NodeMap nodeMap;
         NodeMap::iterator mapIter;
         NodeList nodeList;
+        std::map<std::string, cMessage*> pingedNodes;
         unsigned lastIdx;
 
 	protected:
@@ -43,15 +46,25 @@ class DDash11p : public BaseWaveApplLayer {
 		void sendMessage(std::string blockedRoadId);
 		virtual void handlePositionUpdate(cObject* obj);
 		virtual void sendWSM(WaveShortMessage* wsm);
+
 		virtual void handleSelfMsg(cMessage *msg);
+
 		virtual void sendJoin();
-		virtual void sendPing();
+		virtual void sendPing(const char* nodeName);
+		virtual void sendPingReq(std::string suspciousNode);
+		virtual void sendFail(std::string failedNode);
+		virtual void sendAck(std::string sendTo, std::string destNode);
+		virtual void forwardAck(WaveShortMessage* wsm);
+
         virtual void onJoin(WaveShortMessage* wsm);
         virtual void onPing(WaveShortMessage* wsm);
         virtual void onPingReq(WaveShortMessage* wsm);
         virtual void onAck(WaveShortMessage* wsm);
+
+        void saveNodeInfo(WaveShortMessage *wsm);
         const char* getNextNode();
 		void addNode(const char* name);
+		void setTimer(const char* name);
 
 		/******************************************************************
 		 *

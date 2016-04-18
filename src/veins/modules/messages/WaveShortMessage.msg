@@ -38,6 +38,7 @@ class noncobject NodeMap;
 class noncobject NodeList;
 
 packet WaveShortMessage {
+    
 	//Version of the Wave Short Message
 	int wsmVersion = 0;
 	//Determine which security mechanism was used
@@ -61,7 +62,10 @@ packet WaveShortMessage {
 	NodeMap nodeMap;
 	//DDash Node List
 	NodeList nodeList;
-
+	//DDash src dst for messages
+	string src;
+	string dst;
+	
 	int senderAddress = 0;
 	int recipientAddress = -1;
 	int serial = 0;
