@@ -116,7 +116,6 @@ void BaseWaveApplLayer::handleLowerMsg(cMessage* msg) {
     */
 	switch(msg->getKind()) {
 	case JOIN:
-	    std::cout << "RCV JOIN" << endl;
 	    onJoin(wsm);
 	    break;
 	case PING:

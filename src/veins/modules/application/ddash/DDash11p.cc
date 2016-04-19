@@ -70,7 +70,7 @@ void DDash11p::sendPing(const char* node){
 
     nodeMap[std::string(node)] = PINGWAIT;
 
-    setTimer(node);
+    setTimer(getMyName().c_str(), node);
 
     debug("PING " + std::string(node));
 }
@@ -94,15 +94,17 @@ void DDash11p::sendPingReq(std::string nodeName){
                 wsm->setKind(PINGREQ);
                 wsm->setNodeMap(nodeMap);
                 wsm->setNodeList(nodeList);
-                wsm->setWsmData(getMyName().c_str());
-                wsm->setDst(nodeName.c_str());
+
                 wsm->setSrc(getMyName().c_str());
+                wsm->setDst(nodeList[nodeIdx].c_str());
+
+                wsm->setWsmData(nodeName.c_str());
 
                 sendWSM(wsm);
 
                 nodeMap[nodeName] = PINGREQWAIT;
 
-                setTimer(nodeName.c_str());
+                setTimer(getMyName().c_str(), nodeName.c_str());
                 kNodes++;
             }
 
@@ -149,15 +151,15 @@ void DDash11p::sendMessage(std::string blockedRoadId) {
  *
  **********************************************************************************/
 void DDash11p::onJoin(WaveShortMessage* wsm){
-    if(std::string(wsm->getWsmData()) == mobility->getRoadId()) {
-        debug(wsm->getName() + std::string(" joins road ") + mobility->getRoadId());
+    if(isForMe(wsm)) {
+        debug(wsm->getDst() + std::string(" joins road ") + mobility->getRoadId());
         addNode(wsm->getName());
     }
 }
 
 
 void DDash11p::onPing(WaveShortMessage* wsm){
-    if(wsm->getName() == mobility->getExternalId()) {
+    if(isForMe(wsm)) {
         debug("PING received");
         std::string sender = std::string(wsm->getWsmData());
         saveNodeInfo(wsm);
@@ -167,7 +169,7 @@ void DDash11p::onPing(WaveShortMessage* wsm){
 
 
 void DDash11p::onPingReq(WaveShortMessage* wsm){
-    if(wsm->getName() == mobility->getExternalId()) {
+    if(isForMe(wsm)) {
         debug("PING REQ received");
         saveNodeInfo(wsm);
         sendPing(wsm->getDst());
@@ -178,7 +180,7 @@ void DDash11p::onPingReq(WaveShortMessage* wsm){
 void DDash11p::onAck(WaveShortMessage* wsm){
     std::string destNode = std::string(wsm->getDst());
 
-    if(wsm->getName() == mobility->getExternalId()) {
+    if(isForMe(wsm)) {
         debug("ACK received");
 
         nodeMap[wsm->getSrc()] = ALIVE;
@@ -306,8 +308,10 @@ const char* DDash11p::getNextNode() {
 }
 
 
-void DDash11p::setTimer(const char* nodeName) {
-    cMessage* msg = new cMessage(nodeName, TIMEOUT);
-    pingedNodes[std::string(nodeName)] = msg;
+void DDash11p::setTimer(const char* src, const char* dst) {
+    WaveShortMessage* msg = new WaveShortMessage("", TIMEOUT);
+    msg->setSrc(src);
+    msg->setDst(dst);
+    pingReqTimers[std::string(src)][std::string(dst)] = msg;
     scheduleAt(simTime() + timeout, msg);
 }

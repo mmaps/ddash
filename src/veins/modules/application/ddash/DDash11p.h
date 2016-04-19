@@ -37,7 +37,7 @@ class DDash11p : public BaseWaveApplLayer {
         NodeMap nodeMap;
         NodeMap::iterator mapIter;
         NodeList nodeList;
-        std::map<std::string, cMessage*> pingedNodes;
+        std::map<std::string, std::map<std::string, cMessage*>> pingReqTimers;
         unsigned lastIdx;
 
 	protected:
@@ -64,7 +64,7 @@ class DDash11p : public BaseWaveApplLayer {
         void saveNodeInfo(WaveShortMessage *wsm);
         const char* getNextNode();
 		void addNode(const char* name);
-		void setTimer(const char* name);
+		void setTimer(const char* src, const char* dst);
 
 		/******************************************************************
 		 *
@@ -89,6 +89,10 @@ class DDash11p : public BaseWaveApplLayer {
 
 		bool hasNode(std::string nodeName) {
 		    return nodeMap.find(nodeName) != nodeMap.end();
+		}
+
+		inline bool isForMe(WaveShortMessage* wsm) {
+		    return wsm->getDst() == getMyName();
 		}
 
         /******************************************************************
