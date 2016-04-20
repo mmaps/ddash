@@ -291,7 +291,10 @@ void DDash11p::handleSelfMsg(cMessage* msg) {
                 debug("Timeout on PINGWAIT2. Fail(" + dst + ")");
                 sendFail(dst);
             } else if(nodeMap[dst] == PINGREQWAIT) {
+<<<<<<< HEAD
                 debug("Timeout on PINGREQ. Resetting " + dst);
+=======
+>>>>>>> df812d9162a082e11988fc80d18e80ee5dfcc7e0
                 nodeMap[dst] = ALIVE;
             }
             break;
@@ -315,7 +318,7 @@ void DDash11p::handlePositionUpdate(cObject* obj) {
  *
  **********************************************************************************/
 void DDash11p::saveNodeInfo(WaveShortMessage *wsm) {
-    const char* sender = wsm->getSrc();
+    const char* sender = wsm->getDst();
     if(!hasNode(sender)) {
         debug("Sender is new: " + std::string(sender));
         addNode(sender);
