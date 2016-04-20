@@ -212,6 +212,14 @@ void DDash11p::onAck(WaveShortMessage* wsm){
     }
 }
 
+void DDash11p::onFail(WaveShortMessage* wsm) {
+    std::string failName = std::string(wsm->getWsmData());
+    if(hasNode(failName)) {
+        nodeMap.erase(failName.c_str());
+
+        debug("Delete: " + failName);
+    }
+}
 
 void DDash11p::onBeacon(WaveShortMessage* wsm) {
     if(flashOn) {
@@ -265,7 +273,7 @@ void DDash11p::handleSelfMsg(cMessage* msg) {
             dst = std::string(wsm->getDst());
 
             if(nodeMap[dst] == PINGWAIT) {
-                setTimer(getMyName().c_str(), msg->getDst(), "");
+                setTimer(getMyName().c_str(), wsm->getDst(), "");
                 sendPingReq(dst);
             } else if(nodeMap[dst] == PINGWAIT2) {
                 sendFail(dst);
@@ -345,4 +353,13 @@ void DDash11p::setTimer(const char* src, const char* dst, const char* data) {
     msg->setWsmData(data);
     pingReqTimers[std::string(src)][std::string(dst)] = msg;
     scheduleAt(simTime() + timeout, msg);
+}
+
+void DDash11p::removeFromList(std::string name) {
+    for (int i = 0; i < nodeList.size(); i++) {
+        if (name == nodeList[i]) {
+            nodeList.erase(nodeList.begin() + i);
+            return;
+        }
+    }
 }
