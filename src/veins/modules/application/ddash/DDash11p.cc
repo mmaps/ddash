@@ -132,9 +132,7 @@ void DDash11p::sendAck(std::string src, std::string dst, std::string data) {
     wsm->setSrc(src.c_str());
     wsm->setDst(dst.c_str());
     wsm->setWsmData(data.c_str());
-    while (true) {
 
-        }
     sendWSM(wsm);
     debug("send ack to ping request to " + dst + " from " + data);
 }
@@ -290,7 +288,6 @@ void DDash11p::handleSelfMsg(cMessage* msg) {
             } else if(nodeMap[dst] == PINGWAIT2) {
                 sendFail(dst);
             } else if(nodeMap[dst] == PINGREQWAIT) {
-                sendFail(wsm->getWsmData());
                 nodeMap[dst] = ALIVE;
             }
             break;
@@ -314,7 +311,7 @@ void DDash11p::handlePositionUpdate(cObject* obj) {
  *
  **********************************************************************************/
 void DDash11p::saveNodeInfo(WaveShortMessage *wsm) {
-    const char* sender = wsm->getSrc();
+    const char* sender = wsm->getDst();
     if(!hasNode(sender)) {
         debug("Sender is new: " + std::string(sender));
         addNode(sender);
