@@ -15,6 +15,12 @@ void DDash11p::initialize(int stage) {
         ASSERT(annotations);
         sentMessage = false;
         lastDroveAt = simTime();
+        if(this->findPar("protocolPeriod") < 0) {
+            debug("No protocolperiod");
+        }
+        if(this->findPar("sendBeacons") < 0) {
+            debug("No beacons");
+        }
 
         //simulate asynchronous channel access
         double maxOffset = par("maxOffset").doubleValue();
@@ -25,6 +31,7 @@ void DDash11p::initialize(int stage) {
         //Schedule the first heartbeat messages
         heartbeatMsg = new cMessage((mobility->getExternalId()).c_str(), HEARTBEAT);
         scheduleAt(simTime() + offSet, heartbeatMsg);
+
 
         //Timeout values
         timeout = par("timeoutPeriod").doubleValue();

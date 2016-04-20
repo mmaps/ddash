@@ -25,5 +25,7 @@ simple DDash11p extends BaseWaveApplLayer
 {
     @class(DDash11p);
     @display("i=block/app2");
-    bool sendWhileParking  = default(false); //send messages when the car is parked
+	double timeoutPeriod = default(1s) @unit(s);
+	double protocolPeriod = default(3s) @unit(s);
+	int pingReqNum = default(1);
 }
