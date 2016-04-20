@@ -291,10 +291,7 @@ void DDash11p::handleSelfMsg(cMessage* msg) {
                 debug("Timeout on PINGWAIT2. Fail(" + dst + ")");
                 sendFail(dst);
             } else if(nodeMap[dst] == PINGREQWAIT) {
-<<<<<<< HEAD
                 debug("Timeout on PINGREQ. Resetting " + dst);
-=======
->>>>>>> df812d9162a082e11988fc80d18e80ee5dfcc7e0
                 nodeMap[dst] = ALIVE;
             }
             break;
