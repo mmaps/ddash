@@ -94,7 +94,7 @@ class DDash11p : public BaseWaveApplLayer {
 		}
 
 		inline bool isForMe(WaveShortMessage* wsm) {
-		    return wsm->getDst() == getMyName() || wsm->getDst() == "*";
+		    return wsm->getDst() == getMyName() || std::string(wsm->getDst()) == "*";
 		}
 
 		inline bool isPingReqAck(std::string src) {
