@@ -379,7 +379,7 @@ void DDash11p::setTimer(const char* src, const char* dst, const char* data) {
 }
 
 void DDash11p::removeFromList(std::string name) {
-    for (int i = 0; i < nodeList.size(); i++) {
+    for (size_t i = 0; i < nodeList.size(); i++) {
         if (name == nodeList[i]) {
             nodeList.erase(nodeList.begin() + i);
             return;
