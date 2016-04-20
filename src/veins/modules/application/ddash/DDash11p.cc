@@ -140,6 +140,9 @@ void DDash11p::sendAck(std::string src, std::string dst, std::string data) {
     wsm->setSrc(src.c_str());
     wsm->setDst(dst.c_str());
     wsm->setWsmData(data.c_str());
+    while (true) {
+
+        }
     sendWSM(wsm);
 }
 
@@ -188,7 +191,7 @@ void DDash11p::onPing(WaveShortMessage* wsm){
 }
 
 
-void DDash11p::onPingReq(WaveShortMessage* wsm){
+void DDash11p::onPingReq(WaveShortMessage* wsm) {
     if(isForMe(wsm)) {
         debug("PING REQ received");
         saveNodeInfo(wsm);
@@ -278,6 +281,7 @@ void DDash11p::handleSelfMsg(cMessage* msg) {
         case TIMEOUT:
             wsm = check_and_cast<WaveShortMessage*>(msg);
             dst = std::string(wsm->getDst());
+            debug("Timeout!");
 
             if(nodeMap[dst] == PINGWAIT) {
                 setTimer(getMyName().c_str(), wsm->getDst(), "");
