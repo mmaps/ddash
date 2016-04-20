@@ -49,7 +49,8 @@ void DDash11p::sendJoin(){
     wsm->setKind(JOIN);
     wsm->setWsmData(mobility->getRoadId().c_str());
     sendWSM(wsm);
-    if(!sentJoinDbgMsg) {
+    if(!sentJoinDbgMsg)
+    {
         debug("JOIN");
         sentJoinDbgMsg = true;
     }
@@ -61,7 +62,6 @@ void DDash11p::sendPing(const char* node){
 
     wsm = prepareWSM("", beaconLengthBits, type_CCH, beaconPriority, 0, -1);
     wsm->setKind(PING);
-    wsm->setNodeMap(nodeMap);
     wsm->setNodeList(nodeList);
 
     wsm->setSrc(getMyName().c_str());
@@ -94,7 +94,6 @@ void DDash11p::sendPingReq(std::string nodeName){
             if(middleNode != nodeName && nodeMap[middleNode] == ALIVE) {
                 wsm = prepareWSM("", beaconLengthBits, type_CCH, beaconPriority, 0, -1);
                 wsm->setKind(PINGREQ);
-                wsm->setNodeMap(nodeMap);
                 wsm->setNodeList(nodeList);
 
                 wsm->setSrc(getMyName().c_str());
@@ -178,8 +177,8 @@ void DDash11p::onJoin(WaveShortMessage* wsm){
 
 void DDash11p::onPing(WaveShortMessage* wsm){
     if(isForMe(wsm)) {
-        debug("PING received");
-        std::string sender = std::string(wsm->getWsmData());
+        std::string sender = std::string(wsm->getSrc());
+        debug("PING from " + sender);
         saveNodeInfo(wsm);
         sendAck(sender);
     }
@@ -315,7 +314,7 @@ void DDash11p::handlePositionUpdate(cObject* obj) {
  *
  **********************************************************************************/
 void DDash11p::saveNodeInfo(WaveShortMessage *wsm) {
-    const char* sender = wsm->getWsmData();
+    const char* sender = wsm->getSrc();
     if(!hasNode(sender)) {
         debug("Sender is new: " + std::string(sender));
         addNode(sender);
@@ -330,9 +329,8 @@ void DDash11p::saveNodeInfo(WaveShortMessage *wsm) {
 }
 
 void DDash11p::addNode(const char* name) {
-    debug("addNode " + std::string(name));
-
-    if(nodeMap.find(std::string(name)) == nodeMap.end()) {
+    if(!hasNode(name)) {
+        debug("addNode " + std::string(name));
         nodeList.push_back(std::string(name));
     }
 

@@ -58,8 +58,6 @@ packet WaveShortMessage {
 	//Data of Wave Short Message
 	string wsmData = "Some Data";
 
-	//DDash Node Map
-	NodeMap nodeMap;
 	//DDash Node List
 	NodeList nodeList;
 	//DDash src dst for messages
