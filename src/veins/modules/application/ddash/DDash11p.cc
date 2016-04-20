@@ -15,12 +15,6 @@ void DDash11p::initialize(int stage) {
         ASSERT(annotations);
         sentMessage = false;
         lastDroveAt = simTime();
-        if(this->findPar("protocolPeriod") < 0) {
-            debug("No protocolperiod");
-        }
-        if(this->findPar("sendBeacons") < 0) {
-            debug("No beacons");
-        }
 
         //simulate asynchronous channel access
         double maxOffset = par("maxOffset").doubleValue();
@@ -31,7 +25,6 @@ void DDash11p::initialize(int stage) {
         //Schedule the first heartbeat messages
         heartbeatMsg = new cMessage((mobility->getExternalId()).c_str(), HEARTBEAT);
         scheduleAt(simTime() + offSet, heartbeatMsg);
-
 
         //Timeout values
         timeout = par("timeoutPeriod").doubleValue();
@@ -65,7 +58,6 @@ void DDash11p::sendJoin(){
 
 void DDash11p::sendPing(const char* node){
     WaveShortMessage *wsm;
-
 
     wsm = prepareWSM("", beaconLengthBits, type_CCH, beaconPriority, 0, -1);
     wsm->setKind(PING);
@@ -126,16 +118,17 @@ void DDash11p::sendPingReq(std::string nodeName){
 
 
 void DDash11p::sendAck(std::string dst) {
-    WaveShortMessage* wsm = prepareWSM("", beaconLengthBits, type_CCH, beaconPriority, 0, -1);
+    WaveShortMessage* wsm = prepareWSM("ACK", beaconLengthBits, type_CCH, beaconPriority, 0, -1);
     wsm->setKind(ACK);
     wsm->setSrc(dst.c_str());
     wsm->setWsmData("");
     sendWSM(wsm);
+    debug("send ack to" + dst);
 }
 
 
 void DDash11p::sendAck(std::string src, std::string dst, std::string data) {
-    WaveShortMessage* wsm = prepareWSM("", beaconLengthBits, type_CCH, beaconPriority, 0, -1);
+    WaveShortMessage* wsm = prepareWSM("PINGREQ_ACK", beaconLengthBits, type_CCH, beaconPriority, 0, -1);
     wsm->setKind(ACK);
     wsm->setSrc(src.c_str());
     wsm->setDst(dst.c_str());
@@ -144,6 +137,7 @@ void DDash11p::sendAck(std::string src, std::string dst, std::string data) {
 
         }
     sendWSM(wsm);
+    debug("send ack to ping request to " + dst + " from " + data);
 }
 
 
@@ -156,6 +150,7 @@ void DDash11p::sendFail(std::string nodeName) {
     wsm->setDst("*");
     wsm->setWsmData(nodeName.c_str());
     sendWSM(wsm);
+    debug("Fail " + nodeName);
 }
 
 
@@ -174,8 +169,8 @@ void DDash11p::sendMessage(std::string blockedRoadId) {
  *
  **********************************************************************************/
 void DDash11p::onJoin(WaveShortMessage* wsm){
-    if(isForMe(wsm)) {
-        debug(wsm->getDst() + std::string(" joins road ") + mobility->getRoadId());
+    if(isMyGroup(wsm)) {
+        debug(wsm->getName() + std::string(" joins road ") + mobility->getRoadId());
         addNode(wsm->getName());
     }
 }
@@ -270,7 +265,14 @@ void DDash11p::handleSelfMsg(cMessage* msg) {
             if(nodeMap.empty()) {
                 sendJoin();
             } else {
+
                 const char* nodeName = getNextNode();
+                if(nodeName == nullptr) {
+                    debug("No one to ping");
+                    scheduleAt(simTime() + par("beaconInterval").doubleValue(), heartbeatMsg);
+                    return;
+                }
+
                 setTimer(getMyName().c_str(), nodeName, "");
                 sendPing(nodeName);
             }
@@ -332,7 +334,6 @@ void DDash11p::addNode(const char* name) {
 
     if(nodeMap.find(std::string(name)) == nodeMap.end()) {
         nodeList.push_back(std::string(name));
-        debug("NodeList: " + nodeList.back());
     }
 
     nodeMap[std::string(name)] = ALIVE;
@@ -341,19 +342,30 @@ void DDash11p::addNode(const char* name) {
         mapIter = nodeMap.begin();
         lastIdx = 0;
     }
-
-    dumpMap();
-    debug("NodeMap: " + std::string(nodeMap.find(std::string(name))->first));
 }
 
 
 const char* DDash11p::getNextNode() {
-    const char* next = nodeList[lastIdx].c_str();
-    lastIdx++;
+    std::string next;
+    size_t count = 0;
+    do {
+        if(count == nodeMap.size()) {
+            next = "";
+            if(lastIdx == nodeMap.size()) {
+                lastIdx = 0;
+            }
+            return nullptr;
+        }
+
+        next = nodeList[lastIdx];
+        lastIdx++;
+        count++;
+    } while(nodeMap[next] != ALIVE);
+
     if(lastIdx == nodeMap.size()) {
         lastIdx = 0;
     }
-    return next;
+    return next.c_str();
 }
 
 

@@ -99,6 +99,10 @@ class DDash11p : public BaseWaveApplLayer {
 		    return wsm->getDst() == getMyName() || std::string(wsm->getDst()) == "*";
 		}
 
+		inline bool isMyGroup(WaveShortMessage* wsm) {
+		    return std::string(wsm->getWsmData()) == mobility->getRoadId();
+		}
+
 		inline bool isPingReqAck(std::string src) {
 		    return pingReqSent.find(src) != pingReqSent.end();
 		}
