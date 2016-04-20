@@ -119,10 +119,11 @@ void DDash11p::sendPingReq(std::string nodeName){
 void DDash11p::sendAck(std::string dst) {
     WaveShortMessage* wsm = prepareWSM("ACK", beaconLengthBits, type_CCH, beaconPriority, 0, -1);
     wsm->setKind(ACK);
-    wsm->setSrc(dst.c_str());
+    wsm->setSrc(getMyName().c_str());
+    wsm->setDst(dst.c_str());
     wsm->setWsmData("");
     sendWSM(wsm);
-    debug("send ack to" + dst);
+    debug("send ack to " + dst);
 }
 
 
@@ -132,9 +133,6 @@ void DDash11p::sendAck(std::string src, std::string dst, std::string data) {
     wsm->setSrc(src.c_str());
     wsm->setDst(dst.c_str());
     wsm->setWsmData(data.c_str());
-    while (true) {
-
-        }
     sendWSM(wsm);
     debug("send ack to ping request to " + dst + " from " + data);
 }
@@ -201,7 +199,7 @@ void DDash11p::onAck(WaveShortMessage* wsm){
     std::string data = std::string(wsm->getWsmData());
 
     if(isForMe(wsm)) {
-        debug("ACK received");
+        debug("ACK from " + std::string(src) + ", data: " + data);
 
         nodeMap[src] = ALIVE;
 
@@ -213,6 +211,8 @@ void DDash11p::onAck(WaveShortMessage* wsm){
             sendAck(getMyName(), pingReqSent[src], src);
             pingReqSent.erase(src);
         }
+    } else {
+        debug("Ignore ack for " + std::string(wsm->getDst()));
     }
 }
 
@@ -282,15 +282,16 @@ void DDash11p::handleSelfMsg(cMessage* msg) {
         case TIMEOUT:
             wsm = check_and_cast<WaveShortMessage*>(msg);
             dst = std::string(wsm->getDst());
-            debug("Timeout!");
 
             if(nodeMap[dst] == PINGWAIT) {
+                debug("Timeout on PINGWAIT for " + dst);
                 setTimer(getMyName().c_str(), wsm->getDst(), "");
                 sendPingReq(dst);
             } else if(nodeMap[dst] == PINGWAIT2) {
+                debug("Timeout on PINGWAIT2. Fail(" + dst + ")");
                 sendFail(dst);
             } else if(nodeMap[dst] == PINGREQWAIT) {
-                sendFail(wsm->getWsmData());
+                debug("Timeout on PINGREQ. Resetting " + dst);
                 nodeMap[dst] = ALIVE;
             }
             break;

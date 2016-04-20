@@ -119,7 +119,7 @@ class DDash11p : public BaseWaveApplLayer {
 		    std::cout << endl;
 		}
 		void debug(std::string msg) {
-		    std::cout << mobility->getExternalId() + " (@ " + mobility->getRoadId() + "): " + msg << endl;
+		    std::cout << simTime() << " " << mobility->getExternalId() + " (@ " + mobility->getRoadId() + "): " + msg << endl;
 		}
 };
 
