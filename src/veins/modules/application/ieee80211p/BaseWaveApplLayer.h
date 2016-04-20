@@ -70,7 +70,7 @@ class BaseWaveApplLayer : public BaseApplLayer {
 
 		enum NodeStatus {
 		    ALIVE, SUSP, FAIL,
-		    PINGWAIT, PINGREQWAIT
+		    PINGWAIT, PINGWAIT2, PINGREQWAIT
 		};
 
 	protected:

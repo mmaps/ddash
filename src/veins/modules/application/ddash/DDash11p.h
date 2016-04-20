@@ -38,6 +38,7 @@ class DDash11p : public BaseWaveApplLayer {
         NodeMap::iterator mapIter;
         NodeList nodeList;
         std::map<std::string, std::map<std::string, cMessage*>> pingReqTimers;
+        std::map<std::string, std::string> pingReqSent;
         unsigned lastIdx;
 
 	protected:
@@ -53,7 +54,8 @@ class DDash11p : public BaseWaveApplLayer {
 		virtual void sendPing(const char* nodeName);
 		virtual void sendPingReq(std::string suspciousNode);
 		virtual void sendFail(std::string failedNode);
-		virtual void sendAck(std::string sendTo, std::string destNode);
+		virtual void sendAck(std::string dst);
+		virtual void sendAck(std::string sendTo, std::string destNode, std::string wsmData);
 		virtual void forwardAck(WaveShortMessage* wsm);
 
         virtual void onJoin(WaveShortMessage* wsm);
@@ -64,7 +66,7 @@ class DDash11p : public BaseWaveApplLayer {
         void saveNodeInfo(WaveShortMessage *wsm);
         const char* getNextNode();
 		void addNode(const char* name);
-		void setTimer(const char* src, const char* dst);
+		void setTimer(const char* src, const char* dst, const char* data);
 
 		/******************************************************************
 		 *
@@ -92,7 +94,11 @@ class DDash11p : public BaseWaveApplLayer {
 		}
 
 		inline bool isForMe(WaveShortMessage* wsm) {
-		    return wsm->getDst() == getMyName();
+		    return wsm->getDst() == getMyName() || wsm->getDst() == "*";
+		}
+
+		inline bool isPingReqAck(std::string src) {
+		    return pingReqSent.find(src) != pingReqSent.end();
 		}
 
         /******************************************************************

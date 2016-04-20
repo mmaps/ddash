@@ -60,17 +60,17 @@ void DDash11p::sendPing(const char* node){
     WaveShortMessage *wsm;
 
 
-    wsm = prepareWSM(node, beaconLengthBits, type_CCH, beaconPriority, 0, -1);
+    wsm = prepareWSM("", beaconLengthBits, type_CCH, beaconPriority, 0, -1);
     wsm->setKind(PING);
     wsm->setNodeMap(nodeMap);
     wsm->setNodeList(nodeList);
+
     wsm->setSrc(getMyName().c_str());
+    wsm->setDst(node);
 
     sendWSM(wsm);
 
     nodeMap[std::string(node)] = PINGWAIT;
-
-    setTimer(getMyName().c_str(), node);
 
     debug("PING " + std::string(node));
 }
@@ -82,29 +82,33 @@ void DDash11p::sendPingReq(std::string nodeName){
     int nodeIdx;
     int numNodes = nodeMap.size();
     WaveShortMessage *wsm;
+    std::string middleNode;
 
     if(numNodes - kNodesMax > 1) {
 
         while(kNodes < kNodesMax) {
 
+            /* Select random node for middle man node */
             nodeIdx = rand() % numNodes;
+            middleNode = nodeList[nodeIdx];
 
-            if(nodeList[nodeIdx] != nodeName) {
-                wsm = prepareWSM(nodeList[nodeIdx], beaconLengthBits, type_CCH, beaconPriority, 0, -1);
+            if(middleNode != nodeName && nodeMap[middleNode] == ALIVE) {
+                wsm = prepareWSM("", beaconLengthBits, type_CCH, beaconPriority, 0, -1);
                 wsm->setKind(PINGREQ);
                 wsm->setNodeMap(nodeMap);
                 wsm->setNodeList(nodeList);
 
                 wsm->setSrc(getMyName().c_str());
-                wsm->setDst(nodeList[nodeIdx].c_str());
+                wsm->setDst(middleNode.c_str());
 
                 wsm->setWsmData(nodeName.c_str());
 
                 sendWSM(wsm);
 
-                nodeMap[nodeName] = PINGREQWAIT;
+                nodeMap[nodeName] = PINGWAIT2;
+                nodeMap[middleNode] = PINGREQWAIT;
 
-                setTimer(getMyName().c_str(), nodeName.c_str());
+                setTimer(getMyName().c_str(), middleNode.c_str(), nodeName.c_str());
                 kNodes++;
             }
 
@@ -114,23 +118,32 @@ void DDash11p::sendPingReq(std::string nodeName){
 }
 
 
-void DDash11p::sendAck(std::string sendTo, std::string destNode) {
-    WaveShortMessage* wsm = prepareWSM(sendTo, beaconLengthBits, type_CCH, beaconPriority, 0, -1);
+void DDash11p::sendAck(std::string dst) {
+    WaveShortMessage* wsm = prepareWSM("", beaconLengthBits, type_CCH, beaconPriority, 0, -1);
     wsm->setKind(ACK);
-    wsm->setDst(destNode.c_str());
+    wsm->setSrc(dst.c_str());
+    wsm->setWsmData("");
     sendWSM(wsm);
 }
 
 
-void DDash11p::forwardAck(WaveShortMessage* wsm) {
-    wsm->setName(wsm->getDst());
+void DDash11p::sendAck(std::string src, std::string dst, std::string data) {
+    WaveShortMessage* wsm = prepareWSM("", beaconLengthBits, type_CCH, beaconPriority, 0, -1);
+    wsm->setKind(ACK);
+    wsm->setSrc(src.c_str());
+    wsm->setDst(dst.c_str());
+    wsm->setWsmData(data.c_str());
     sendWSM(wsm);
 }
+
+
+void DDash11p::forwardAck(WaveShortMessage* wsm) {}
 
 
 void DDash11p::sendFail(std::string nodeName) {
-    WaveShortMessage* wsm = prepareWSM("*", beaconLengthBits, type_CCH, beaconPriority, 0, -1);
+    WaveShortMessage* wsm = prepareWSM("", beaconLengthBits, type_CCH, beaconPriority, 0, -1);
     wsm->setKind(FAIL);
+    wsm->setDst("*");
     wsm->setWsmData(nodeName.c_str());
     sendWSM(wsm);
 }
@@ -163,7 +176,7 @@ void DDash11p::onPing(WaveShortMessage* wsm){
         debug("PING received");
         std::string sender = std::string(wsm->getWsmData());
         saveNodeInfo(wsm);
-        sendAck(sender, sender);
+        sendAck(sender);
     }
 }
 
@@ -172,21 +185,29 @@ void DDash11p::onPingReq(WaveShortMessage* wsm){
     if(isForMe(wsm)) {
         debug("PING REQ received");
         saveNodeInfo(wsm);
-        sendPing(wsm->getDst());
+        setTimer(wsm->getSrc(), wsm->getWsmData(), "");
+        sendPing(wsm->getWsmData());
+        pingReqSent[wsm->getWsmData()] = wsm->getSrc();
     }
 }
 
 
 void DDash11p::onAck(WaveShortMessage* wsm){
-    std::string destNode = std::string(wsm->getDst());
+    const char* src = wsm->getSrc();
+    std::string data = std::string(wsm->getWsmData());
 
     if(isForMe(wsm)) {
         debug("ACK received");
 
-        nodeMap[wsm->getSrc()] = ALIVE;
+        nodeMap[src] = ALIVE;
 
-        if(getMyName() != destNode) {
-            forwardAck(wsm);
+        if(data != "") {
+            nodeMap[data] = ALIVE;
+        }
+
+        if(isPingReqAck(std::string(src))) {
+            sendAck(getMyName(), pingReqSent[src], src);
+            pingReqSent.erase(src);
         }
     }
 }
@@ -223,25 +244,34 @@ void DDash11p::receiveSignal(cComponent* source, simsignal_t signalID, cObject* 
  **********************************************************************************/
 
 void DDash11p::handleSelfMsg(cMessage* msg) {
-    std::string name;
+    std::string dst;
+    WaveShortMessage *wsm;
 
     switch (msg->getKind()) {
         case HEARTBEAT:
             if(nodeMap.empty()) {
                 sendJoin();
             } else {
-                sendPing(getNextNode());
+                const char* nodeName = getNextNode();
+                setTimer(getMyName().c_str(), nodeName, "");
+                sendPing(nodeName);
             }
 
             scheduleAt(simTime() + par("beaconInterval").doubleValue(), heartbeatMsg);
             break;
 
         case TIMEOUT:
-            name = std::string(msg->getName());
-            if(nodeMap[name] == PINGWAIT) {
-                sendPingReq(name);
-            } else if(nodeMap[name] == PINGREQWAIT) {
-                sendFail(name);
+            wsm = check_and_cast<WaveShortMessage*>(msg);
+            dst = std::string(wsm->getDst());
+
+            if(nodeMap[dst] == PINGWAIT) {
+                setTimer(getMyName().c_str(), msg->getDst(), "");
+                sendPingReq(dst);
+            } else if(nodeMap[dst] == PINGWAIT2) {
+                sendFail(dst);
+            } else if(nodeMap[dst] == PINGREQWAIT) {
+                sendFail(wsm->getWsmData());
+                nodeMap[dst] = ALIVE;
             }
             break;
 
@@ -308,10 +338,11 @@ const char* DDash11p::getNextNode() {
 }
 
 
-void DDash11p::setTimer(const char* src, const char* dst) {
+void DDash11p::setTimer(const char* src, const char* dst, const char* data) {
     WaveShortMessage* msg = new WaveShortMessage("", TIMEOUT);
     msg->setSrc(src);
     msg->setDst(dst);
+    msg->setWsmData(data);
     pingReqTimers[std::string(src)][std::string(dst)] = msg;
     scheduleAt(simTime() + timeout, msg);
 }
