@@ -45,9 +45,16 @@ void DDash11p::sendWSM(WaveShortMessage* wsm) {
 
 void DDash11p::sendJoin(){
     WaveShortMessage *wsm;
-    wsm = prepareWSM(mobility->getExternalId(), beaconLengthBits, type_CCH, beaconPriority, 0, -1);
-    wsm->setKind(JOIN);
-    wsm->setWsmData(mobility->getRoadId().c_str());
+    NodeMsgs joinList;
+    joinList.push_front(getMyName());
+
+    wsm = prepareWSM(getMyName(), beaconLengthBits, type_CCH, beaconPriority, 0, -1);
+    wsm->setKind(PING);
+    wsm->setJoinMsgs(joinList);
+    wsm->setSrc(getMyName().c_str());
+    wsm->setDst("*");
+    wsm->setGroup(mobility->getRoadId().c_str());
+
     sendWSM(wsm);
     if(!sentJoinDbgMsg)
     {
@@ -62,11 +69,11 @@ void DDash11p::sendPing(const char* node){
 
     wsm = prepareWSM("", beaconLengthBits, type_CCH, beaconPriority, 0, -1);
     wsm->setKind(PING);
-    wsm->setNodeList(nodeList);
+    setUpdateMsgs(wsm);
 
     wsm->setSrc(getMyName().c_str());
     wsm->setDst(node);
-
+    wsm->setGroup(getGroup().c_str());
     sendWSM(wsm);
 
     nodeMap[std::string(node)] = PINGWAIT;
@@ -94,24 +101,27 @@ void DDash11p::sendPingReq(std::string nodeName){
             if(middleNode != nodeName && nodeMap[middleNode] == ALIVE) {
                 wsm = prepareWSM("", beaconLengthBits, type_CCH, beaconPriority, 0, -1);
                 wsm->setKind(PINGREQ);
-                wsm->setNodeList(nodeList);
+                setUpdateMsgs(wsm);
 
                 wsm->setSrc(getMyName().c_str());
                 wsm->setDst(middleNode.c_str());
-
+                wsm->setGroup(getGroup().c_str());
                 wsm->setWsmData(nodeName.c_str());
 
                 sendWSM(wsm);
 
-                nodeMap[nodeName] = PINGWAIT2;
                 nodeMap[middleNode] = PINGREQWAIT;
 
                 setTimer(getMyName().c_str(), middleNode.c_str(), nodeName.c_str());
                 kNodes++;
+
+                debug("Sent PINGREQ to " + middleNode + " for " + nodeName);
             }
 
         }
 
+    } else {
+        debug("Not enough nodes for K");
     }
 }
 
@@ -122,6 +132,7 @@ void DDash11p::sendAck(std::string dst) {
     wsm->setSrc(getMyName().c_str());
     wsm->setDst(dst.c_str());
     wsm->setWsmData("");
+    wsm->setGroup(getGroup().c_str());
     sendWSM(wsm);
     debug("send ack to " + dst);
 }
@@ -133,6 +144,7 @@ void DDash11p::sendAck(std::string src, std::string dst, std::string data) {
     wsm->setSrc(src.c_str());
     wsm->setDst(dst.c_str());
     wsm->setWsmData(data.c_str());
+    wsm->setGroup(getGroup().c_str());
     sendWSM(wsm);
     debug("send ack to ping request to " + dst + " from " + data);
 }
@@ -140,7 +152,7 @@ void DDash11p::sendAck(std::string src, std::string dst, std::string data) {
 
 void DDash11p::forwardAck(WaveShortMessage* wsm) {}
 
-
+//TODO need to remove this and add the node to leaveMsgs instead
 void DDash11p::sendFail(std::string nodeName) {
     WaveShortMessage* wsm = prepareWSM("", beaconLengthBits, type_CCH, beaconPriority, 0, -1);
     wsm->setKind(FAIL);
@@ -165,28 +177,23 @@ void DDash11p::sendMessage(std::string blockedRoadId) {
  * RECEIVE METHODS
  *
  **********************************************************************************/
-void DDash11p::onJoin(WaveShortMessage* wsm){
-    if(isMyGroup(wsm)) {
-        debug(wsm->getName() + std::string(" joins road ") + mobility->getRoadId());
-        addNode(wsm->getName());
-    }
-}
-
 
 void DDash11p::onPing(WaveShortMessage* wsm){
-    if(isForMe(wsm)) {
+    if(isMyGroup(wsm) && isForMe(wsm)) {
         std::string sender = std::string(wsm->getSrc());
         debug("PING from " + sender);
         saveNodeInfo(wsm);
+        getUpdateMsgs(wsm);
         sendAck(sender);
     }
 }
 
 
 void DDash11p::onPingReq(WaveShortMessage* wsm) {
-    if(isForMe(wsm)) {
+    if(isMyGroup(wsm) && isForMe(wsm)) {
         debug("PING REQ received");
         saveNodeInfo(wsm);
+        getUpdateMsgs(wsm);
         setTimer(wsm->getSrc(), wsm->getWsmData(), "");
         sendPing(wsm->getWsmData());
         pingReqSent[wsm->getWsmData()] = wsm->getSrc();
@@ -195,19 +202,23 @@ void DDash11p::onPingReq(WaveShortMessage* wsm) {
 
 
 void DDash11p::onAck(WaveShortMessage* wsm){
-    const char* src = wsm->getSrc();
+    std::string src = std::string(wsm->getSrc());
     std::string data = std::string(wsm->getWsmData());
 
-    if(isForMe(wsm)) {
-        debug("ACK from " + std::string(src) + ", data: " + data);
+    if(isMyGroup(wsm) && isForMe(wsm)) {
+        debug("ACK from " + src + ", data: " + data);
 
-        nodeMap[src] = ALIVE;
+        if(!hasNode(src)) {
+            addNode(src.c_str());
+        } else {
+            nodeMap[src] = ALIVE;
+        }
 
         if(data != "") {
             nodeMap[data] = ALIVE;
         }
 
-        if(isPingReqAck(std::string(src))) {
+        if(isPingReqAck(src)) {
             sendAck(getMyName(), pingReqSent[src], src);
             pingReqSent.erase(src);
         }
@@ -219,8 +230,8 @@ void DDash11p::onAck(WaveShortMessage* wsm){
 void DDash11p::onFail(WaveShortMessage* wsm) {
     std::string failName = std::string(wsm->getWsmData());
     if(hasNode(failName)) {
-        nodeMap.erase(failName.c_str());
-
+        nodeMap.erase(failName);
+        removeFromList(failName);
         debug("Delete: " + failName);
     }
 }
@@ -287,6 +298,7 @@ void DDash11p::handleSelfMsg(cMessage* msg) {
                 debug("Timeout on PINGWAIT for " + dst);
                 setTimer(getMyName().c_str(), wsm->getDst(), "");
                 sendPingReq(dst);
+                nodeMap[dst] = PINGWAIT2;
             } else if(nodeMap[dst] == PINGWAIT2) {
                 debug("Timeout on PINGWAIT2. Fail(" + dst + ")");
                 sendFail(dst);
@@ -315,17 +327,10 @@ void DDash11p::handlePositionUpdate(cObject* obj) {
  *
  **********************************************************************************/
 void DDash11p::saveNodeInfo(WaveShortMessage *wsm) {
-    const char* sender = wsm->getDst();
+    const char* sender = wsm->getSrc();
     if(!hasNode(sender)) {
         debug("Sender is new: " + std::string(sender));
         addNode(sender);
-    }
-
-    for(std::string s: wsm->getNodeList()) {
-        if(!isMyName(s) && !hasNode(s)) {
-            debug("New node " + s);
-            addNode(s.c_str());
-        }
     }
 }
 
@@ -355,7 +360,6 @@ const char* DDash11p::getNextNode() {
             }
             return nullptr;
         }
-
         next = nodeList[lastIdx];
         lastIdx++;
         count++;
@@ -377,11 +381,71 @@ void DDash11p::setTimer(const char* src, const char* dst, const char* data) {
     scheduleAt(simTime() + timeout, msg);
 }
 
+
 void DDash11p::removeFromList(std::string name) {
+    debug("Remove NodeList: " + name);
     for (size_t i = 0; i < nodeList.size(); i++) {
         if (name == nodeList[i]) {
+
             nodeList.erase(nodeList.begin() + i);
             return;
         }
+    }
+}
+
+
+void DDash11p::setUpdateMsgs(WaveShortMessage* wsm) {
+    NodeMsgs msgs;
+
+    for(NodeMap::iterator it=joinMsgs.begin(); it!=joinMsgs.end(); it++) {
+        msgs.push_front(it->first);
+    }
+    wsm->setJoinMsgs(msgs);
+
+    msgs.clear();
+
+    for(NodeMap::iterator it=leaveMsgs.begin(); it!=leaveMsgs.end(); it++) {
+        msgs.push_front(it->first);
+    }
+    wsm->setLeaveMsgs(msgs);
+}
+
+
+void DDash11p::getUpdateMsgs(WaveShortMessage* wsm) {
+    NodeMsgs joins = wsm->getJoinMsgs();
+    NodeMsgs leaves = wsm->getLeaveMsgs();
+    debug("Update");
+    for(std::string s: joins) {
+        debug("Node " + s);
+        joinMsgs[s]++;
+        if(joinMsgs[s] >= joinMax) {
+            joinMaxes.push_back(s);
+            joinMax = joinMsgs[s];
+        }
+
+        if(!isMyName(s) && !hasNode(s)) {
+             debug("New node " + s);
+             addNode(s.c_str());
+         }
+    }
+
+    for(std::string s: leaves) {
+        leaveMsgs[s]++;
+        if(leaveMsgs[s] >= leaveMax) {
+            leaveMaxes.push_back(s);
+            leaveMax = leaveMsgs[s];
+        }
+        removeFromList(s);
+        nodeMap.erase(s);
+    }
+
+    if(leaveMsgs.size() > LRU_SIZE) {
+        leaveMsgs.erase(leaveMaxes.back());
+        leaveMaxes.pop_back();
+    }
+
+    if(joinMsgs.size() > LRU_SIZE) {
+        joinMsgs.erase(joinMaxes.back());
+        joinMaxes.pop_back();
     }
 }

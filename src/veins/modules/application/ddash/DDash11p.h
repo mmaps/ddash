@@ -7,13 +7,16 @@
 #include "veins/modules/mobility/traci/TraCICommandInterface.h"
 #include <map>
 #include <utility>
+#include <list>
 
 using Veins::TraCIMobility;
 using Veins::TraCICommandInterface;
 using Veins::AnnotationManager;
 typedef std::map<std::string, int> NodeMap;
 typedef std::vector<std::string> NodeList;
+typedef std::list<std::string> NodeMsgs;
 
+#define LRU_SIZE 10
 
 class DDash11p : public BaseWaveApplLayer {
 	public:
@@ -36,6 +39,12 @@ class DDash11p : public BaseWaveApplLayer {
         cMessage *timeoutMsg;
         NodeMap nodeMap;
         NodeMap::iterator mapIter;
+        NodeMap joinMsgs;
+        int joinMax = -1;
+        NodeList joinMaxes;
+        NodeMap leaveMsgs;
+        int leaveMax = -1;
+        NodeList leaveMaxes;
         NodeList nodeList;
         std::map<std::string, std::map<std::string, cMessage*>> pingReqTimers;
         std::map<std::string, std::string> pingReqSent;
@@ -58,7 +67,6 @@ class DDash11p : public BaseWaveApplLayer {
 		virtual void sendAck(std::string sendTo, std::string destNode, std::string wsmData);
 		virtual void forwardAck(WaveShortMessage* wsm);
 
-        virtual void onJoin(WaveShortMessage* wsm);
         virtual void onPing(WaveShortMessage* wsm);
         virtual void onPingReq(WaveShortMessage* wsm);
         virtual void onAck(WaveShortMessage* wsm);
@@ -69,14 +77,20 @@ class DDash11p : public BaseWaveApplLayer {
 		void addNode(const char* name);
 		void setTimer(const char* src, const char* dst, const char* data);
 		void removeFromList(std::string name);
+		void setUpdateMsgs(WaveShortMessage *wsm);
+		void getUpdateMsgs(WaveShortMessage *wsm);
 
 		/******************************************************************
 		 *
 		 * Simple Methods. Can be made inline
 		 *
 		 ******************************************************************/
-		std::string getMyName() {
+		inline std::string getMyName() {
 		    return mobility->getExternalId();
+		}
+
+		inline std::string getGroup() {
+		    return mobility->getRoadId();
 		}
 
 		bool isMyName(const char* nodeName) {
@@ -95,12 +109,16 @@ class DDash11p : public BaseWaveApplLayer {
 		    return nodeMap.find(nodeName) != nodeMap.end();
 		}
 
+		bool hasNode(NodeMap someMap, std::string key) {
+		    return someMap.find(key) != someMap.end();
+		}
+
 		inline bool isForMe(WaveShortMessage* wsm) {
-		    return wsm->getDst() == getMyName() || std::string(wsm->getDst()) == "*";
+		    return std::string(wsm->getDst()) == getMyName() || std::string(wsm->getDst()) == std::string("*");
 		}
 
 		inline bool isMyGroup(WaveShortMessage* wsm) {
-		    return std::string(wsm->getWsmData()) == mobility->getRoadId();
+		    return std::string(wsm->getGroup()) == mobility->getRoadId();
 		}
 
 		inline bool isPingReqAck(std::string src) {

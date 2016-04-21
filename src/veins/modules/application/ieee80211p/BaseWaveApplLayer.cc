@@ -115,9 +115,6 @@ void BaseWaveApplLayer::handleLowerMsg(cMessage* msg) {
 	}
     */
 	switch(msg->getKind()) {
-	case JOIN:
-	    onJoin(wsm);
-	    break;
 	case PING:
 	    onPing(wsm);
 	    break;
@@ -128,7 +125,7 @@ void BaseWaveApplLayer::handleLowerMsg(cMessage* msg) {
 	    onAck(wsm);
 	    break;
 	default:
-	    std::cout << "ERROR kind" << endl;
+	    std::cout << "ERROR kind: " << wsm->getSrc() << " " << wsm->getDst() << " " << wsm->getGroup() << endl;
 	}
 	delete(msg);
 }
@@ -168,7 +165,6 @@ BaseWaveApplLayer::~BaseWaveApplLayer() {
 
 }
 
-void BaseWaveApplLayer::onJoin(WaveShortMessage* wsm){}
 void BaseWaveApplLayer::onPing(WaveShortMessage* wsm){}
 void BaseWaveApplLayer::onPingReq(WaveShortMessage* wsm){}
 void BaseWaveApplLayer::onAck(WaveShortMessage* wsm){}

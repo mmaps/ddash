@@ -61,17 +61,16 @@ class BaseWaveApplLayer : public BaseApplLayer {
 			SEND_BEACON_EVT,
 			HEARTBEAT,
 			TIMEOUT,
-			JOIN,
 			PING,
 			PINGREQ,
 			ACK,
-			LEAVE
 		};
 
 		enum NodeStatus {
 		    ALIVE, SUSP, FAIL,
 		    PINGWAIT, PINGWAIT2, PINGREQWAIT
 		};
+
 
 	protected:
 
@@ -84,7 +83,6 @@ class BaseWaveApplLayer : public BaseApplLayer {
 		virtual void sendWSM(WaveShortMessage* wsm);
 		virtual void onBeacon(WaveShortMessage* wsm) = 0;
 		virtual void onData(WaveShortMessage* wsm) = 0;
-		virtual void onJoin(WaveShortMessage* wsm);
 		virtual void onPing(WaveShortMessage* wsm);
         virtual void onPingReq(WaveShortMessage* wsm);
         virtual void onAck(WaveShortMessage* wsm);

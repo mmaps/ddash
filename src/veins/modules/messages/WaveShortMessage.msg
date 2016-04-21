@@ -22,6 +22,7 @@ cplusplus {{
 #include "veins/base/utils/Coord.h"
 #include "src/veins/modules/messages/WaveShortMessage_m.h"
 #include <map>
+#include <list>
 	// Credit to: http://stackoverflow.com/questions/34269656/message-generation-error-ambigious-overload-of-operator
 	typedef std::string MyString;
 	inline std::ostream & operator << (std::ostream & os, const MyString & s) {
@@ -31,11 +32,13 @@ cplusplus {{
 	
 	typedef std::map<std::string, int> NodeMap;
 	typedef std::vector<std::string> NodeList;
+	typedef std::list<std::string> NodeMsgs;
 }}
 
 class noncobject Coord;
 class noncobject NodeMap;
 class noncobject NodeList;
+class noncobject NodeMsgs;
 
 packet WaveShortMessage {
     
@@ -58,12 +61,15 @@ packet WaveShortMessage {
 	//Data of Wave Short Message
 	string wsmData = "Some Data";
 
-	//DDash Node List
-	NodeList nodeList;
+	//DDash Group name
+	string group;
 	//DDash src dst for messages
 	string src;
 	string dst;
-	
+	//DDash Group updates
+	NodeMsgs joinMsgs;
+	NodeMsgs leaveMsgs;
+		
 	int senderAddress = 0;
 	int recipientAddress = -1;
 	int serial = 0;
