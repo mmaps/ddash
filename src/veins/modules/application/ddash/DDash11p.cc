@@ -278,13 +278,17 @@ void DDash11p::handleSelfMsg(cMessage* msg) {
 
                 const char* nodeName = getNextNode();
                 if(nodeName == nullptr) {
-                    debug("No one to ping");
+                    if(!sentNoOneDbgMsg) {
+                        debug("No one to ping");
+                        sentNoOneDbgMsg = true;
+                    }
                     scheduleAt(simTime() + par("beaconInterval").doubleValue(), heartbeatMsg);
                     return;
                 }
 
                 setTimer(getMyName().c_str(), nodeName, "");
                 sendPing(nodeName);
+                sentNoOneDbgMsg = false;
             }
 
             scheduleAt(simTime() + par("beaconInterval").doubleValue(), heartbeatMsg);
@@ -301,7 +305,7 @@ void DDash11p::handleSelfMsg(cMessage* msg) {
                 nodeMap[dst] = PINGWAIT2;
             } else if(nodeMap[dst] == PINGWAIT2) {
                 debug("Timeout on PINGWAIT2. Fail(" + dst + ")");
-                sendFail(dst);
+                failNode(dst);
             } else if(nodeMap[dst] == PINGREQWAIT) {
                 debug("Timeout on PINGREQ. Resetting " + dst);
                 nodeMap[dst] = ALIVE;
@@ -318,6 +322,12 @@ void DDash11p::handleSelfMsg(cMessage* msg) {
 
 void DDash11p::handlePositionUpdate(cObject* obj) {
     BaseWaveApplLayer::handlePositionUpdate(obj);
+    if(roadChanged()) {
+        debug("Leaving group " + groupName);
+        groupName = mobility->getRoadId();
+        leaveMsgs.clear();
+        joinMsgs.clear();
+    }
 }
 
 
@@ -333,6 +343,15 @@ void DDash11p::saveNodeInfo(WaveShortMessage *wsm) {
         addNode(sender);
     }
 }
+
+
+void DDash11p::failNode(std::string name) {
+    debug("Fail(" + name + ")");
+    leaveMsgs[name]++;
+    removeFromList(name);
+    nodeMap.erase(name);
+}
+
 
 void DDash11p::addNode(const char* name) {
     if(!hasNode(name)) {
@@ -414,9 +433,8 @@ void DDash11p::setUpdateMsgs(WaveShortMessage* wsm) {
 void DDash11p::getUpdateMsgs(WaveShortMessage* wsm) {
     NodeMsgs joins = wsm->getJoinMsgs();
     NodeMsgs leaves = wsm->getLeaveMsgs();
-    debug("Update");
     for(std::string s: joins) {
-        debug("Node " + s);
+        debug("Update= join(" + s + ")");
         joinMsgs[s]++;
         if(joinMsgs[s] >= joinMax) {
             joinMaxes.push_back(s);
@@ -431,6 +449,7 @@ void DDash11p::getUpdateMsgs(WaveShortMessage* wsm) {
 
     for(std::string s: leaves) {
         leaveMsgs[s]++;
+        debug("Update= leave(" + s + ")");
         if(leaveMsgs[s] >= leaveMax) {
             leaveMaxes.push_back(s);
             leaveMax = leaveMsgs[s];

@@ -8,6 +8,7 @@
 #include <map>
 #include <utility>
 #include <list>
+#include <string.h>
 
 using Veins::TraCIMobility;
 using Veins::TraCICommandInterface;
@@ -33,6 +34,7 @@ class DDash11p : public BaseWaveApplLayer {
 		bool sentMessage;
 		bool flashOn;
 		bool sentJoinDbgMsg = false;
+		bool sentNoOneDbgMsg = false;
 		double timeout;
 		double period;
         cMessage *heartbeatMsg;
@@ -49,6 +51,7 @@ class DDash11p : public BaseWaveApplLayer {
         std::map<std::string, std::map<std::string, cMessage*>> pingReqTimers;
         std::map<std::string, std::string> pingReqSent;
         unsigned lastIdx;
+        std::string groupName;
 
 	protected:
 		virtual void onBeacon(WaveShortMessage* wsm);
@@ -75,6 +78,7 @@ class DDash11p : public BaseWaveApplLayer {
         void saveNodeInfo(WaveShortMessage *wsm);
         const char* getNextNode();
 		void addNode(const char* name);
+		void failNode(std::string name);
 		void setTimer(const char* src, const char* dst, const char* data);
 		void removeFromList(std::string name);
 		void setUpdateMsgs(WaveShortMessage *wsm);
@@ -90,7 +94,12 @@ class DDash11p : public BaseWaveApplLayer {
 		}
 
 		inline std::string getGroup() {
-		    return mobility->getRoadId();
+		    // Updated in handlePositionUpdate
+		    return groupName;
+		}
+
+		inline bool roadChanged() {
+		    return groupName.compare(mobility->getRoadId());
 		}
 
 		bool isMyName(const char* nodeName) {
@@ -137,7 +146,7 @@ class DDash11p : public BaseWaveApplLayer {
 		    std::cout << endl;
 		}
 		void debug(std::string msg) {
-		    std::cout << simTime() << " " << mobility->getExternalId() + " (@ " + mobility->getRoadId() + "): " + msg << endl;
+		    std::cout <<  simTime().dbl() << " (" << getGroup() << ") " << getMyName() << ": " << msg << endl;
 		}
 };
 
