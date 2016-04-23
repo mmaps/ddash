@@ -95,6 +95,13 @@ void DDash11p::sendPingReq(std::string nodeName){
         while(kNodes < kNodesMax) {
             /* Select random node for middle man node */
             nodeIdx = rand() % numNodes;
+            while (nodeIdx == nodeList.size()) {
+                nodeIdx = rand() % numNodes;
+            }
+
+            std::cout << "nodeIdx: " << nodeIdx << endl;
+            std::cout << "nodeList size: " << nodeList.size() << endl;
+
             middleNode = nodeList[nodeIdx];
 
             if(nodeMap[middleNode] == PINGREQWAIT) {
