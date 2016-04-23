@@ -139,9 +139,17 @@ class DDash11p : public BaseWaveApplLayer {
          * Debug Methods
          *
          ******************************************************************/
-		void dumpMap() {
+		inline void dumpMap() {
 		    for(NodeMap::iterator it=nodeMap.begin(); it!=nodeMap.end(); ++it) {
 		        std::cout << it->first << ", ";
+		    }
+		    std::cout << endl;
+		}
+
+		inline void dumpList() {
+		    std::cout << getMyName() << " nodeList: ";
+		    for(std::string s: nodeList) {
+		        std::cout << s << ", ";
 		    }
 		    std::cout << endl;
 		}

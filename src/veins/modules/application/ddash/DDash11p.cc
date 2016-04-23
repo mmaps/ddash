@@ -400,6 +400,9 @@ const char* DDash11p::getNextNode() {
             }
             return nullptr;
         }
+
+        std::cout << getMyName() << ": nodeList size: " << nodeList.size() << " nodeMap size: " << nodeMap.size() << " lastIdx: " << lastIdx << endl;
+
         next = nodeList[lastIdx];
         lastIdx++;
         count++;
@@ -423,14 +426,22 @@ void DDash11p::setTimer(const char* src, const char* dst, const char* data) {
 
 
 void DDash11p::removeFromList(std::string name) {
-    debug("Remove NodeList: " + name);
-    for (size_t i = 0; i < nodeList.size(); i++) {
-        if (name == nodeList[i]) {
+    debug("Remove from list: " + name);
 
+    //dumpList();
+
+    for (size_t i = 0; i < nodeList.size(); i++) {
+        if (!name.compare(nodeList[i])) {
             nodeList.erase(nodeList.begin() + i);
-            return;
+            break;
         }
     }
+
+    if(lastIdx >= nodeList.size()) {
+        lastIdx = 0;
+    }
+
+    dumpList();
 }
 
 // add join and leave membership list to message
@@ -448,7 +459,6 @@ void DDash11p::setUpdateMsgs(WaveShortMessage* wsm) {
         msgs.push_front(it->first);
     }
     wsm->setLeaveMsgs(msgs);
-    debug("Join and leave membership list added to wsm!");
 }
 
 // update join and leave membership list through receiving message
@@ -456,6 +466,9 @@ void DDash11p::getUpdateMsgs(WaveShortMessage* wsm) {
     NodeMsgs joins = wsm->getJoinMsgs();
     NodeMsgs leaves = wsm->getLeaveMsgs();
     for(std::string s: joins) {
+        if(!s.compare(getMyName())) {
+            continue;
+        }
         debug("Update= join(" + s + ")");
         joinMsgs[s]++;
         if(joinMsgs[s] >= joinMax) {
@@ -470,6 +483,9 @@ void DDash11p::getUpdateMsgs(WaveShortMessage* wsm) {
     }
 
     for(std::string s: leaves) {
+        if(!s.compare(getMyName())) {
+            continue;
+        }
         leaveMsgs[s]++;
         debug("Update= leave(" + s + ")");
         if(leaveMsgs[s] >= leaveMax) {
