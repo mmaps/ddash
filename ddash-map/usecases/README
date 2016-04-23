@@ -1,0 +1,18 @@
+There are 3 rou.xml files with the different traffic flows:
+
+1. cmuforbes.rou.xml - contains traffic on forbes: 
+This can be used for 
+	1. Accident Signalling - rerouting of vehicles
+	2. Showing reliable communication beyond wireless range
+*Note: currently, it generates only 4 vehicles; it can be changed to multiple by changing the number in the line (the number attribute)
+<flow id="flow0" type="vtype0" route="route0" begin="0" period="3" number="4"/>
+
+2. cmugroupformation.rou.xml - contains 3 traffic flows
+This can be used to show group formations
+- Currently, I have generated 3 flows (vehicles for different flows have a different color - yellow; red; green)
+- each flow has 2 vehicles (so 6 vehicles in total when they come on the same lane)
+- the vehicles come from different lanes; come together to be on the same lane (on Fifth Ave) and then leave at different times
+
+3. cmuscalability.rou.xml - contains 12 traffic flows
+This can be used to show the scalability and the statictis - ToDo- we still have to decide on what stats to show once this runs with our protocol. 
+Each flow will generate 20 cars = 240 cars in total!

@@ -121,6 +121,8 @@ void DDash11p::sendPingReq(std::string nodeName){
         }
 
     } else {
+        // debug("nodemap size: " + numNodes);
+        // debug("k: " + kNodesMax);
         debug("Not enough nodes for K");
     }
 }
@@ -152,16 +154,35 @@ void DDash11p::sendAck(std::string src, std::string dst, std::string data) {
 
 void DDash11p::forwardAck(WaveShortMessage* wsm) {}
 
-//TODO need to remove this and add the node to leaveMsgs instead
+// TODO need to remove this and add the node to leaveMsgs instead
+// remove from own list, and then multicast its own list to the membership list
 void DDash11p::sendFail(std::string nodeName) {
-    WaveShortMessage* wsm = prepareWSM("", beaconLengthBits, type_CCH, beaconPriority, 0, -1);
-    wsm->setKind(FAIL);
+    debug("Preparing to send failing message: " + nodeName);
+    WaveShortMessage* wsm = prepareWSM("Failure Detector msg", beaconLengthBits, type_CCH, beaconPriority, 0, -1);
+    wsm->setKind(PING);
     wsm->setDst("*");
     wsm->setWsmData(nodeName.c_str());
+
+    // delete from its own node
+    leaveMsgs[nodeName]++;
+    if(leaveMsgs[nodeName] >= leaveMax) {
+        leaveMaxes.push_back(nodeName);
+        leaveMax = leaveMsgs[nodeName];
+    }
+    removeFromList(nodeName);
+    nodeMap.erase(nodeName);
+
+    if(leaveMsgs.size() > LRU_SIZE) {
+        leaveMsgs.erase(leaveMaxes.back());
+        leaveMaxes.pop_back();
+    }
+
+    // update joining and leaving messages, and send with msg
+    setUpdateMsgs(wsm);
+
     sendWSM(wsm);
     debug("Fail " + nodeName);
 }
-
 
 void DDash11p::sendMessage(std::string blockedRoadId) {
     sentMessage = true;
@@ -188,7 +209,6 @@ void DDash11p::onPing(WaveShortMessage* wsm){
     }
 }
 
-
 void DDash11p::onPingReq(WaveShortMessage* wsm) {
     if(isMyGroup(wsm) && isForMe(wsm)) {
         debug("PING REQ received");
@@ -199,7 +219,6 @@ void DDash11p::onPingReq(WaveShortMessage* wsm) {
         pingReqSent[wsm->getWsmData()] = wsm->getSrc();
     }
 }
-
 
 void DDash11p::onAck(WaveShortMessage* wsm){
     std::string src = std::string(wsm->getSrc());
@@ -227,6 +246,7 @@ void DDash11p::onAck(WaveShortMessage* wsm){
     }
 }
 
+/*
 void DDash11p::onFail(WaveShortMessage* wsm) {
     std::string failName = std::string(wsm->getWsmData());
     if(hasNode(failName)) {
@@ -235,6 +255,7 @@ void DDash11p::onFail(WaveShortMessage* wsm) {
         debug("Delete: " + failName);
     }
 }
+*/
 
 void DDash11p::onBeacon(WaveShortMessage* wsm) {
     if(flashOn) {
@@ -246,11 +267,9 @@ void DDash11p::onBeacon(WaveShortMessage* wsm) {
     }
 }
 
-
 void DDash11p::onData(WaveShortMessage* wsm) {
     findHost()->getDisplayString().updateWith("r=16,green");
 }
-
 
 void DDash11p::receiveSignal(cComponent* source, simsignal_t signalID, cObject* obj) {
     Enter_Method_Silent();
@@ -299,11 +318,13 @@ void DDash11p::handleSelfMsg(cMessage* msg) {
             dst = std::string(wsm->getDst());
 
             if(nodeMap[dst] == PINGWAIT) {
+                // timeout msg from sender to middle node, asking ping-req help
                 debug("Timeout on PINGWAIT for " + dst);
                 setTimer(getMyName().c_str(), wsm->getDst(), "");
                 sendPingReq(dst);
                 nodeMap[dst] = PINGWAIT2;
             } else if(nodeMap[dst] == PINGWAIT2) {
+                // timeout msg from middle node to suspicious node
                 debug("Timeout on PINGWAIT2. Fail(" + dst + ")");
                 failNode(dst);
             } else if(nodeMap[dst] == PINGREQWAIT) {
@@ -390,7 +411,7 @@ const char* DDash11p::getNextNode() {
     return next.c_str();
 }
 
-
+// schedule TIMEOUT message
 void DDash11p::setTimer(const char* src, const char* dst, const char* data) {
     WaveShortMessage* msg = new WaveShortMessage("", TIMEOUT);
     msg->setSrc(src);
@@ -412,7 +433,7 @@ void DDash11p::removeFromList(std::string name) {
     }
 }
 
-
+// add join and leave membership list to message
 void DDash11p::setUpdateMsgs(WaveShortMessage* wsm) {
     NodeMsgs msgs;
 
@@ -427,9 +448,10 @@ void DDash11p::setUpdateMsgs(WaveShortMessage* wsm) {
         msgs.push_front(it->first);
     }
     wsm->setLeaveMsgs(msgs);
+    debug("Join and leave membership list added to wsm!");
 }
 
-
+// update join and leave membership list through receiving message
 void DDash11p::getUpdateMsgs(WaveShortMessage* wsm) {
     NodeMsgs joins = wsm->getJoinMsgs();
     NodeMsgs leaves = wsm->getLeaveMsgs();
