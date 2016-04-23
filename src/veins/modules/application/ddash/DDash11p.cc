@@ -79,6 +79,7 @@ void DDash11p::sendPing(const char* node){
     nodeMap[std::string(node)] = PINGWAIT;
 
     debug("PING " + std::string(node));
+
 }
 
 
@@ -86,20 +87,22 @@ void DDash11p::sendPingReq(std::string nodeName){
     int kNodesMax = par("pingReqNum");
     int kNodes = 0;
     int nodeIdx;
-    int numNodes = nodeMap.size() + 1;
-    WaveShortMessage *wsm;
+    int numNodes = nodeMap.size();
     std::string middleNode;
 
-    if(numNodes - kNodesMax > 1) {
-
+    if(numNodes - kNodesMax >= 1) {
+        debug("Getting K nodes");
         while(kNodes < kNodesMax) {
-
             /* Select random node for middle man node */
             nodeIdx = rand() % numNodes;
             middleNode = nodeList[nodeIdx];
 
+            if(nodeMap[middleNode] == PINGREQWAIT) {
+                kNodes++;
+            }
+
             if(middleNode != nodeName && nodeMap[middleNode] == ALIVE) {
-                wsm = prepareWSM("", beaconLengthBits, type_CCH, beaconPriority, 0, -1);
+                WaveShortMessage *wsm = prepareWSM("", beaconLengthBits, type_CCH, beaconPriority, 0, -1);
                 wsm->setKind(PINGREQ);
                 setUpdateMsgs(wsm);
 
@@ -213,7 +216,7 @@ void DDash11p::onPing(WaveShortMessage* wsm){
 
 void DDash11p::onPingReq(WaveShortMessage* wsm) {
     if(isMyGroup(wsm) && isForMe(wsm)) {
-        debug("PING REQ received");
+        debug("PING REQ received from " + std::string(wsm->getSrc()) + " for " + std::string(wsm->getWsmData()));
         saveNodeInfo(wsm);
         getUpdateMsgs(wsm);
         setTimer(wsm->getSrc(), wsm->getWsmData(), "");
@@ -393,7 +396,9 @@ void DDash11p::addNode(const char* name) {
 
 const char* DDash11p::getNextNode() {
     std::string next;
+    std::ostringstream os;
     size_t count = 0;
+
     do {
         if(count == nodeMap.size()) {
             next = "";
@@ -402,14 +407,37 @@ const char* DDash11p::getNextNode() {
             }
             return nullptr;
         }
+
         next = nodeList[lastIdx];
         lastIdx++;
+        if(lastIdx == nodeMap.size()) {
+            lastIdx = 0;
+        }
+
         count++;
+
+        os << next << ": ";
+        switch(nodeMap[next]){
+        case ALIVE:
+            os << "alive";
+            break;
+        case PINGWAIT:
+            os << "ping wait";
+            break;
+        case PINGWAIT2:
+            os << "ping wait 2";
+            break;
+        case PINGREQWAIT:
+            os << "ping request wait";
+            break;
+        default:
+            os << "something else";
+        }
+        os << endl;
+        debug(os.str());
     } while(nodeMap[next] != ALIVE);
 
-    if(lastIdx == nodeMap.size()) {
-        lastIdx = 0;
-    }
+
     return next.c_str();
 }
 
