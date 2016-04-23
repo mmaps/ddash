@@ -438,8 +438,10 @@ const char* DDash11p::getNextNode() {
 
     do {
         debug("Getting next PING target");
+        std::cout << "lastidx: " << lastIdx << endl;
+        std::cout << "nodelist: " << nodeList.size() << endl;
 
-        if(count == nodeMap.size()) {
+        if(count == nodeMap.size() || nodeList.size() == lastIdx) {
             next = "";
             if(lastIdx == nodeMap.size()) {
                 lastIdx = 0;
