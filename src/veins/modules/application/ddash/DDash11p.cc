@@ -99,8 +99,8 @@ void DDash11p::sendPingReq(std::string nodeName){
                 nodeIdx = rand() % numNodes;
             }
 
-            std::cout << "nodeIdx: " << nodeIdx << endl;
-            std::cout << "nodeList size: " << nodeList.size() << endl;
+            // std::cout << "nodeIdx: " << nodeIdx << endl;
+            // std::cout << "nodeList size: " << nodeList.size() << endl;
 
             middleNode = nodeList[nodeIdx];
 
