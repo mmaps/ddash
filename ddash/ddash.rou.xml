@@ -2,5 +2,12 @@
 
     <vType id="car" accel="0.8" decel="4.5" sigma="0.5" length="5" maxSpeed="15" speedFactor="1" speedDev="0.2"/>
     <route id="route0" edges="0/0to0/1 0/1to1/1 1/1to1/0 1/0to0/0" />
+    <route id="route2" edges="0/0to0/1 0/1to0/2" />
+    <route id="route1" edges="0/0to0/1 0/1to1/1 1/1to2/1" />
+    <!--
     <flow id="flow4" color="1,0,1" begin="10" end="10000" period="20" type="car" route="route0"/>
+	-->
+    <flow id="cars1" color="1,0,1" begin="10" end="11" period="20" type="car" route="route0"/>
+    <flow id="cars2" color="1,0,1" begin="11" end="12" period="20" type="car" route="route1"/>
+    <flow id="cars3" color="1,0,1" begin="12" end="13" period="20" type="car" route="route2"/>
 </routes>
