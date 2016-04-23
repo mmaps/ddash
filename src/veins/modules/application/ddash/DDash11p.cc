@@ -86,7 +86,7 @@ void DDash11p::sendPingReq(std::string nodeName){
     int kNodesMax = par("pingReqNum");
     int kNodes = 0;
     int nodeIdx;
-    int numNodes = nodeMap.size();
+    int numNodes = nodeMap.size() + 1;
     WaveShortMessage *wsm;
     std::string middleNode;
 
@@ -123,7 +123,9 @@ void DDash11p::sendPingReq(std::string nodeName){
     } else {
         // debug("nodemap size: " + numNodes);
         // debug("k: " + kNodesMax);
-        debug("Not enough nodes for K");
+        std::ostringstream os;
+        os << "nodeMap.size: " << nodeMap.size() << " K: " << kNodesMax;
+        debug("Not enough nodes for K " + os.str());
     }
 }
 
@@ -400,9 +402,6 @@ const char* DDash11p::getNextNode() {
             }
             return nullptr;
         }
-
-        std::cout << getMyName() << ": nodeList size: " << nodeList.size() << " nodeMap size: " << nodeMap.size() << " lastIdx: " << lastIdx << endl;
-
         next = nodeList[lastIdx];
         lastIdx++;
         count++;

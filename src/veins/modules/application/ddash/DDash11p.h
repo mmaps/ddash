@@ -140,19 +140,23 @@ class DDash11p : public BaseWaveApplLayer {
          *
          ******************************************************************/
 		inline void dumpMap() {
+		    std::ostringstream os;
+		    os << "MAP: " << getMyName() << ", ";
 		    for(NodeMap::iterator it=nodeMap.begin(); it!=nodeMap.end(); ++it) {
-		        std::cout << it->first << ", ";
+		        os << it->first << ", ";
 		    }
-		    std::cout << endl;
+		    debug(os.str());
 		}
 
 		inline void dumpList() {
-		    std::cout << getMyName() << " nodeList: ";
+		    std::ostringstream os;
+		    os << "LIST: " << getMyName() << ", ";
 		    for(std::string s: nodeList) {
-		        std::cout << s << ", ";
+		        os << s << ", ";
 		    }
-		    std::cout << endl;
+		    debug(os.str());
 		}
+
 		void debug(std::string msg) {
 		    std::cout <<  simTime().dbl() << " (" << getGroup() << ") " << getMyName() << ": " << msg << endl;
 		}
