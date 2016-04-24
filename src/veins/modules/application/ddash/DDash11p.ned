@@ -28,4 +28,8 @@ simple DDash11p extends BaseWaveApplLayer
 	double timeoutPeriod = default(1s) @unit(s);
 	double protocolPeriod = default(3s) @unit(s);
 	int pingReqNum = default(1);
+	int accidentCount = default(0);  // number of accidents
+    double accidentStart @unit("s") = default(uniform(30s,60s));  // time until first accident, relative to departure time
+    volatile double accidentDuration @unit("s") = default(uniform(30s,60s));  // duration of accident
+    volatile double accidentInterval @unit("s") = default(uniform(30s,60s));  // time between accidents
 }

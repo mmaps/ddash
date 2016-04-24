@@ -39,6 +39,9 @@ class DDash11p : public BaseWaveApplLayer {
 		double period;
         cMessage *heartbeatMsg;
         cMessage *timeoutMsg;
+        int accidentCount;
+        cMessage *startAccidentMsg;
+        cMessage *stopAccidentMsg;
         NodeMap nodeMap;
         NodeMap::iterator mapIter;
         NodeMap joinMsgs;

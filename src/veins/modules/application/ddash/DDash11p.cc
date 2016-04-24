@@ -29,6 +29,16 @@ void DDash11p::initialize(int stage) {
         //Timeout values
         timeout = par("timeoutPeriod").doubleValue();
         period = par("protocolPeriod").doubleValue();
+
+        //Accident values
+        accidentCount = par("accidentCount");
+        if (accidentCount > 0) {
+            debug("I'm gonna crash!");
+            simtime_t accidentStart = par("accidentStart");
+            startAccidentMsg = new cMessage("scheduledAccident");
+            stopAccidentMsg = new cMessage("scheduledAccidentResolved");
+            scheduleAt(simTime() + accidentStart, startAccidentMsg);
+        }
     }
 }
 
