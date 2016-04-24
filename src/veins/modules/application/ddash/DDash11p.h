@@ -48,6 +48,7 @@ class DDash11p : public BaseWaveApplLayer {
         cMessage *startAccidentMsg;
         cMessage *stopAccidentMsg;
         NodeMap nodeMap;
+        NodeMap groupConns;
         NodeMap::iterator mapIter;
         NodeMap joinMsgs;
         int joinMax = -1;
@@ -92,7 +93,8 @@ class DDash11p : public BaseWaveApplLayer {
 		void getUpdateMsgs(WaveShortMessage *wsm);
 		void handleAccidentStart();
 		void handleAccidentStop();
-
+		void disconnectGroupMember(int gateNum);
+		int connectGroupMember(const char* name);
 		/******************************************************************
 		 *
 		 * Simple Methods. Can be made inline
@@ -127,7 +129,7 @@ class DDash11p : public BaseWaveApplLayer {
 		    return nodeMap.find(nodeName) != nodeMap.end();
 		}
 
-		bool hasNode(NodeMap someMap, std::string key) {
+		inline bool hasNode(NodeMap someMap, std::string key) {
 		    return someMap.find(key) != someMap.end();
 		}
 

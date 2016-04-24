@@ -31,6 +31,8 @@ module CarDdash
         string veinsmobilityType; //type of the mobility module
     gates:
         input veinsradioIn; // gate for sendDirect
+        input gIn[];
+        output gOut[];
     submodules:
         appl: <applType> like org.car2x.veins.base.modules.IBaseApplLayer {
             parameters:

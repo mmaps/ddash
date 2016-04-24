@@ -52,11 +52,6 @@ void DDash11p::initialize(int stage) {
  * SEND METHODS
  *
  **********************************************************************************/
-void DDash11p::sendWSM(WaveShortMessage* wsm) {
-	sendDelayedDown(wsm,individualOffset);
-}
-
-
 void DDash11p::sendJoin(){
     WaveShortMessage *wsm;
     NodeMsgs joinList;
@@ -67,7 +62,7 @@ void DDash11p::sendJoin(){
     wsm->setJoinMsgs(joinList);
     wsm->setSrc(getMyName().c_str());
     wsm->setDst("*");
-    wsm->setGroup(getGroupName());
+    wsm->setGroup(getGroupName().c_str());
 
     sendWSM(wsm);
     if(!sentJoinDbgMsg)
@@ -216,6 +211,10 @@ void DDash11p::sendMessage(std::string blockedRoadId) {
     sendWSM(wsm);
 }
 
+void DDash11p::sendWSM(WaveShortMessage* wsm) {
+    wsm->setSenderPath(this->getParentModule()->getFullPath().c_str());
+    sendDelayedDown(wsm,individualOffset);
+}
 
 /**********************************************************************************
  *
@@ -302,9 +301,6 @@ void DDash11p::receiveSignal(cComponent* source, simsignal_t signalID, cObject* 
 void DDash11p::handleSelfMsg(cMessage* msg) {
     std::string dst;
     WaveShortMessage *wsm;
-
-    debug("Received schedule msg");
-
     switch (msg->getKind()) {
         case HEARTBEAT:
             if(nodeMap.empty()) {
@@ -372,11 +368,25 @@ void DDash11p::handleSelfMsg(cMessage* msg) {
 
 void DDash11p::handlePositionUpdate(cObject* obj) {
     BaseWaveApplLayer::handlePositionUpdate(obj);
+    cGate* cg;
     if(roadChanged()) {
         debug("Leaving group " + groupName);
         groupName = mobility->getRoadId();
         leaveMsgs.clear();
         joinMsgs.clear();
+        groupConns.clear();
+        for(int i=0; i<this->getParentModule()->gateSize("gIn"); i++) {
+            cg = this->getParentModule()->gate("gIn", i);
+            if(cg) {
+                cg->disconnect();
+            }
+        }
+        for(int i=0; i<this->getParentModule()->gateSize("gOut"); i++) {
+            cg = this->getParentModule()->gate("gOut", i);
+            if(cg) {
+                cg->disconnect();
+            }
+        }
     }
 }
 
@@ -514,10 +524,16 @@ void DDash11p::setUpdateMsgs(WaveShortMessage* wsm) {
 void DDash11p::getUpdateMsgs(WaveShortMessage* wsm) {
     NodeMsgs joins = wsm->getJoinMsgs();
     NodeMsgs leaves = wsm->getLeaveMsgs();
+    int gateNum;
+
     for(std::string s: joins) {
         if(!s.compare(getMyName())) {
             continue;
         }
+
+        gateNum = connectGroupMember(wsm->getSenderPath());
+        groupConns[s] = gateNum;
+
         debug("Update= join(" + s + ")");
         joinMsgs[s]++;
         if(joinMsgs[s] >= joinMax) {
@@ -528,7 +544,8 @@ void DDash11p::getUpdateMsgs(WaveShortMessage* wsm) {
         if(!isMyName(s) && !hasNode(s)) {
              debug("New node " + s);
              addNode(s.c_str());
-         }
+
+        }
     }
 
     for(std::string s: leaves) {
@@ -543,6 +560,10 @@ void DDash11p::getUpdateMsgs(WaveShortMessage* wsm) {
         }
         removeFromList(s);
         nodeMap.erase(s);
+        if(hasNode(groupConns, s)) {
+            disconnectGroupMember(groupConns[s]);
+            groupConns.erase(s);
+        }
     }
 
     if(leaveMsgs.size() > LRU_SIZE) {
@@ -553,5 +574,38 @@ void DDash11p::getUpdateMsgs(WaveShortMessage* wsm) {
     if(joinMsgs.size() > LRU_SIZE) {
         joinMsgs.erase(joinMaxes.back());
         joinMaxes.pop_back();
+    }
+}
+
+
+int DDash11p::connectGroupMember(const char* name) {
+    cModule *thatMod, *thisMod;
+    cGate *thatGate, *thisGate;
+    int thatSize, thisSize;
+    cChannel *cChan;
+
+    thatMod = simulation.getModuleByPath(name);
+    thisMod = this->getParentModule();
+    if(thatMod) {
+        thatSize = thatMod->gateSize("gOut") + 1;
+        thisSize = thisMod->gateSize("gIn") + 1;
+        thatMod->setGateSize("gOut", thatSize);
+        thisMod->setGateSize("gIn", thisSize);
+        thatGate = thatMod->gate("gOut", thatSize-1);
+        thisGate = thisMod->gate("gIn", thisSize-1);
+        cChan = thatGate->connectTo(thisGate, cIdealChannel::create("test"));
+
+        if(cChan) {
+            cChan->getDisplayString().parse("ls=red,3");
+        }
+    }
+
+    return thatSize-1;
+}
+
+
+void DDash11p::disconnectGroupMember(int gateNum) {
+    if(gateNum < this->getParentModule()->gateSize("gIn")) {
+        this->getParentModule()->gate("gIn", gateNum)->disconnect();
     }
 }

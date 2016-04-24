@@ -69,6 +69,11 @@ packet WaveShortMessage {
 	//DDash Group updates
 	NodeMsgs joinMsgs;
 	NodeMsgs leaveMsgs;
+	NodeMsgs criticalMsgs;
+	
+	//Used to draw groups
+	string senderPath;
+	
 		
 	int senderAddress = 0;
 	int recipientAddress = -1;

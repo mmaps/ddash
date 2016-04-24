@@ -77,6 +77,9 @@ WaveShortMessage*  BaseWaveApplLayer::prepareWSM(std::string name, int lengthBit
 	wsm->setSenderPos(curPosition);
 	wsm->setSerial(serial);
 
+	// Used for groups
+	wsm->setSenderPath(this->getFullPath().c_str());
+
 	if (name == "beacon") {
 		DBG << "Creating Beacon with Priority " << priority << " at Applayer at " << wsm->getTimestamp() << std::endl;
 	}
