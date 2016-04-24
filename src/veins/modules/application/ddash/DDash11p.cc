@@ -86,7 +86,7 @@ void DDash11p::sendPing(const char* node){
 void DDash11p::sendPingReq(std::string nodeName){
     int kNodesMax = par("pingReqNum");
     int kNodes = 0;
-    int nodeIdx;
+    size_t nodeIdx;
     int numNodes = nodeMap.size();
     std::string middleNode;
     std::ostringstream os;
@@ -98,7 +98,6 @@ void DDash11p::sendPingReq(std::string nodeName){
     }
 
     debug("Sending K nodes PINGREQ");
-
     for(kNodes=0; kNodes<kNodesMax; kNodes++) {
         nodeIdx = rand() % numNodes;
         if(nodeIdx >= nodeList.size()) {
