@@ -24,6 +24,9 @@ class DDash11p : public BaseWaveApplLayer {
 		virtual void initialize(int stage);
 		virtual void receiveSignal(cComponent* source, simsignal_t signalID, cObject* obj);
 
+		enum accidentMessageKinds {
+		    START_ACC, STOP_ACC
+		};
 	protected:
 		TraCIMobility* mobility;
 		TraCICommandInterface* traci;
@@ -40,6 +43,8 @@ class DDash11p : public BaseWaveApplLayer {
         cMessage *heartbeatMsg;
         cMessage *timeoutMsg;
         int accidentCount;
+        simtime_t accidentInterval;
+        simtime_t accidentDuration;
         cMessage *startAccidentMsg;
         cMessage *stopAccidentMsg;
         NodeMap nodeMap;
@@ -85,6 +90,8 @@ class DDash11p : public BaseWaveApplLayer {
 		void removeFromList(std::string name);
 		void setUpdateMsgs(WaveShortMessage *wsm);
 		void getUpdateMsgs(WaveShortMessage *wsm);
+		void handleAccidentStart();
+		void handleAccidentStop();
 
 		/******************************************************************
 		 *
@@ -136,6 +143,9 @@ class DDash11p : public BaseWaveApplLayer {
 		    return pingReqSent.find(src) != pingReqSent.end();
 		}
 
+		inline void setColor(const char* color) {
+		    findHost()->getDisplayString().updateWith(color);
+		}
         /******************************************************************
          *
          * Debug Methods

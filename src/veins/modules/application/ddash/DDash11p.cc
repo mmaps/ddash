@@ -31,12 +31,16 @@ void DDash11p::initialize(int stage) {
         period = par("protocolPeriod").doubleValue();
 
         //Accident values
+        accidentInterval = par("accidentInterval");
+        accidentDuration = par("accidentDuration");
         accidentCount = par("accidentCount");
         if (accidentCount > 0) {
             debug("I'm gonna crash!");
             simtime_t accidentStart = par("accidentStart");
             startAccidentMsg = new cMessage("scheduledAccident");
+            startAccidentMsg->setKind(START_ACC);
             stopAccidentMsg = new cMessage("scheduledAccidentResolved");
+            stopAccidentMsg->setKind(STOP_ACC);
             scheduleAt(simTime() + accidentStart, startAccidentMsg);
         }
     }
@@ -345,6 +349,19 @@ void DDash11p::handleSelfMsg(cMessage* msg) {
             }
             break;
 
+        case START_ACC:
+            handleAccidentStart();
+            scheduleAt(simTime() + accidentDuration, stopAccidentMsg);
+            accidentCount--;
+            break;
+
+        case STOP_ACC:
+            handleAccidentStop();
+            if(accidentCount > 0) {
+                scheduleAt(simTime() + accidentInterval, startAccidentMsg);
+            }
+            break;
+
         default:
             if (msg)
                 DBG << "APP: Error: Got Self Message of unknown kind! Name: " << msg->getName() << endl;
@@ -361,6 +378,20 @@ void DDash11p::handlePositionUpdate(cObject* obj) {
         leaveMsgs.clear();
         joinMsgs.clear();
     }
+}
+
+
+void DDash11p::handleAccidentStart() {
+    debug("*** Start Accident ***");
+    setColor("r=16,red");
+    traciVehicle->setSpeed(0);
+}
+
+
+void DDash11p::handleAccidentStop() {
+    debug("*** End Accident ***");
+    setColor("r=0,-");
+    traciVehicle->setSpeed(-1);
 }
 
 

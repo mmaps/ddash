@@ -102,18 +102,6 @@ void BaseWaveApplLayer::handlePositionUpdate(cObject* obj) {
 void BaseWaveApplLayer::handleLowerMsg(cMessage* msg) {
 	WaveShortMessage* wsm = dynamic_cast<WaveShortMessage*>(msg);
 	ASSERT(wsm);
-
-	/*
-	if (std::string(wsm->getName()) == "beacon") {
-		onBeacon(wsm);
-	}
-	else if (std::string(wsm->getName()) == "data") {
-		onData(wsm);
-	}
-	else {
-		DBG << "unknown message (" << wsm->getName() << ")  received\n";
-	}
-    */
 	switch(msg->getKind()) {
 	case PING:
 	    onPing(wsm);
