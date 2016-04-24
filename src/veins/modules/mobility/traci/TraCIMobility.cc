@@ -138,6 +138,7 @@ void TraCIMobility::finish()
 
 void TraCIMobility::handleSelfMsg(cMessage *msg)
 {
+    std::cout << "HANDLE SELF " << getExternalId() << endl;
 	if (msg == startAccidentMsg) {
 		getVehicleCommandInterface()->setSpeed(0);
 		simtime_t accidentDuration = par("accidentDuration");

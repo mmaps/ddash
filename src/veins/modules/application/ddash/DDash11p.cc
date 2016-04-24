@@ -89,53 +89,52 @@ void DDash11p::sendPingReq(std::string nodeName){
     int nodeIdx;
     int numNodes = nodeMap.size();
     std::string middleNode;
+    std::ostringstream os;
 
-    if(numNodes - kNodesMax >= 1) {
-        debug("Getting K nodes");
-        while(kNodes < kNodesMax) {
-            /* Select random node for middle man node */
-            nodeIdx = rand() % numNodes;
-            while (nodeIdx == nodeList.size()) {
-                nodeIdx = rand() % numNodes;
-            }
-
-            std::cout << "nodeIdx: " << nodeIdx << endl;
-            std::cout << "nodeList size: " << nodeList.size() << endl;
-
-            middleNode = nodeList[nodeIdx];
-
-            if(nodeMap[middleNode] == PINGREQWAIT) {
-                kNodes++;
-            }
-
-            if(middleNode != nodeName && nodeMap[middleNode] == ALIVE) {
-                WaveShortMessage *wsm = prepareWSM("", beaconLengthBits, type_CCH, beaconPriority, 0, -1);
-                wsm->setKind(PINGREQ);
-                setUpdateMsgs(wsm);
-
-                wsm->setSrc(getMyName().c_str());
-                wsm->setDst(middleNode.c_str());
-                wsm->setGroup(getGroup().c_str());
-                wsm->setWsmData(nodeName.c_str());
-
-                sendWSM(wsm);
-
-                nodeMap[middleNode] = PINGREQWAIT;
-
-                setTimer(getMyName().c_str(), middleNode.c_str(), nodeName.c_str());
-                kNodes++;
-
-                debug("Sent PINGREQ to " + middleNode + " for " + nodeName);
-            }
-
-        }
-
-    } else {
-        // debug("nodemap size: " + numNodes);
-        // debug("k: " + kNodesMax);
-        std::ostringstream os;
+    if(numNodes - kNodesMax < 1) {
         os << "nodeMap.size: " << nodeMap.size() << " K: " << kNodesMax;
         debug("Not enough nodes for K " + os.str());
+        return;
+    }
+
+    debug("Sending K nodes PINGREQ");
+
+    for(kNodes=0; kNodes<kNodesMax; kNodes++) {
+        nodeIdx = rand() % numNodes;
+        if(nodeIdx >= nodeList.size()) {
+            continue;
+        }
+
+        middleNode = nodeList[nodeIdx];
+        if(!middleNode.compare(nodeName)) {
+            continue;
+        }
+
+        int ns = nodeMap[middleNode];
+
+        dumpNode(middleNode);
+
+        if(ns != ALIVE) {
+            continue;
+        }
+
+
+        WaveShortMessage *wsm = prepareWSM("", beaconLengthBits, type_CCH, beaconPriority, 0, -1);
+        wsm->setKind(PINGREQ);
+        setUpdateMsgs(wsm);
+
+        wsm->setSrc(getMyName().c_str());
+        wsm->setDst(middleNode.c_str());
+        wsm->setGroup(getGroup().c_str());
+        wsm->setWsmData(nodeName.c_str());
+
+        sendWSM(wsm);
+
+        nodeMap[middleNode] = PINGREQWAIT;
+
+        setTimer(getMyName().c_str(), middleNode.c_str(), nodeName.c_str());
+
+        debug("Sent PINGREQ to " + middleNode + " for " + nodeName);
     }
 }
 
@@ -291,6 +290,8 @@ void DDash11p::handleSelfMsg(cMessage* msg) {
     std::string dst;
     WaveShortMessage *wsm;
 
+    debug("Received schedule msg");
+
     switch (msg->getKind()) {
         case HEARTBEAT:
             if(nodeMap.empty()) {
@@ -393,10 +394,11 @@ void DDash11p::addNode(const char* name) {
 
 const char* DDash11p::getNextNode() {
     std::string next;
-    std::ostringstream os;
     size_t count = 0;
 
     do {
+        debug("Getting next PING target");
+
         if(count == nodeMap.size()) {
             next = "";
             if(lastIdx == nodeMap.size()) {
@@ -412,26 +414,7 @@ const char* DDash11p::getNextNode() {
         }
 
         count++;
-
-        os << next << ": ";
-        switch(nodeMap[next]){
-        case ALIVE:
-            os << "alive";
-            break;
-        case PINGWAIT:
-            os << "ping wait";
-            break;
-        case PINGWAIT2:
-            os << "ping wait 2";
-            break;
-        case PINGREQWAIT:
-            os << "ping request wait";
-            break;
-        default:
-            os << "something else";
-        }
-        os << endl;
-        debug(os.str());
+        dumpNode(next);
     } while(nodeMap[next] != ALIVE);
 
 

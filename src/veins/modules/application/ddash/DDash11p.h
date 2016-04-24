@@ -142,7 +142,7 @@ class DDash11p : public BaseWaveApplLayer {
 		    std::ostringstream os;
 		    os << "MAP: " << getMyName() << ", ";
 		    for(NodeMap::iterator it=nodeMap.begin(); it!=nodeMap.end(); ++it) {
-		        os << it->first << ", ";
+		        os << it->first << ": " << it->second <<", ";
 		    }
 		    debug(os.str());
 		}
@@ -154,6 +154,28 @@ class DDash11p : public BaseWaveApplLayer {
 		        os << s << ", ";
 		    }
 		    debug(os.str());
+		}
+
+		inline void dumpNode(std::string name) {
+		    std::ostringstream os;
+		    os << "Node(" << name << "): ";
+	        switch(nodeMap[name]){
+                case ALIVE:
+                    os << "alive";
+                    break;
+                case PINGWAIT:
+                    os << "ping wait";
+                    break;
+                case PINGWAIT2:
+                    os << "ping wait 2";
+                    break;
+                case PINGREQWAIT:
+                    os << "ping request wait";
+                    break;
+                default:
+                    os << "something else";
+	        }
+	        debug(os.str());
 		}
 
 		void debug(std::string msg) {
