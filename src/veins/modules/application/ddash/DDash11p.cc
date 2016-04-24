@@ -251,16 +251,6 @@ void DDash11p::onAck(WaveShortMessage* wsm){
     }
 }
 
-/*
-void DDash11p::onFail(WaveShortMessage* wsm) {
-    std::string failName = std::string(wsm->getWsmData());
-    if(hasNode(failName)) {
-        nodeMap.erase(failName);
-        removeFromList(failName);
-        debug("Delete: " + failName);
-    }
-}
-*/
 
 void DDash11p::onBeacon(WaveShortMessage* wsm) {
     if(flashOn) {

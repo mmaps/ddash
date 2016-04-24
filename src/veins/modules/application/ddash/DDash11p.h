@@ -73,7 +73,6 @@ class DDash11p : public BaseWaveApplLayer {
         virtual void onPing(WaveShortMessage* wsm);
         virtual void onPingReq(WaveShortMessage* wsm);
         virtual void onAck(WaveShortMessage* wsm);
-        // virtual void onFail(WaveShortMessage* wsm);
 
         void saveNodeInfo(WaveShortMessage *wsm);
         const char* getNextNode();
