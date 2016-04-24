@@ -102,7 +102,7 @@ class DDash11p : public BaseWaveApplLayer {
 		    return mobility->getExternalId();
 		}
 
-		inline std::string getGroup() {
+		inline std::string getGroupName() {
 		    // Updated in handlePositionUpdate
 		    return groupName;
 		}
@@ -143,7 +143,7 @@ class DDash11p : public BaseWaveApplLayer {
 		    return pingReqSent.find(src) != pingReqSent.end();
 		}
 
-		inline void setColor(const char* color) {
+		inline void setDisplay(const char* color) {
 		    findHost()->getDisplayString().updateWith(color);
 		}
         /******************************************************************
@@ -192,7 +192,7 @@ class DDash11p : public BaseWaveApplLayer {
 		}
 
 		void debug(std::string msg) {
-		    std::cout <<  simTime().dbl() << " (" << getGroup() << ") " << getMyName() << ": " << msg << endl;
+		    std::cout <<  simTime().dbl() << " (" << getGroupName() << ") " << getMyName() << ": " << msg << endl;
 		}
 };
 

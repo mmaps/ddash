@@ -67,12 +67,12 @@ void DDash11p::sendJoin(){
     wsm->setJoinMsgs(joinList);
     wsm->setSrc(getMyName().c_str());
     wsm->setDst("*");
-    wsm->setGroup(mobility->getRoadId().c_str());
+    wsm->setGroup(getGroupName());
 
     sendWSM(wsm);
     if(!sentJoinDbgMsg)
     {
-        debug("JOIN");
+        debug("JOIN(" + getMyName() +") to " + getGroupName());
         sentJoinDbgMsg = true;
     }
 }
@@ -87,7 +87,7 @@ void DDash11p::sendPing(const char* node){
 
     wsm->setSrc(getMyName().c_str());
     wsm->setDst(node);
-    wsm->setGroup(getGroup().c_str());
+    wsm->setGroup(getGroupName().c_str());
     sendWSM(wsm);
 
     nodeMap[std::string(node)] = PINGWAIT;
@@ -138,7 +138,7 @@ void DDash11p::sendPingReq(std::string nodeName){
 
         wsm->setSrc(getMyName().c_str());
         wsm->setDst(middleNode.c_str());
-        wsm->setGroup(getGroup().c_str());
+        wsm->setGroup(getGroupName().c_str());
         wsm->setWsmData(nodeName.c_str());
 
         sendWSM(wsm);
@@ -158,7 +158,7 @@ void DDash11p::sendAck(std::string dst) {
     wsm->setSrc(getMyName().c_str());
     wsm->setDst(dst.c_str());
     wsm->setWsmData("");
-    wsm->setGroup(getGroup().c_str());
+    wsm->setGroup(getGroupName().c_str());
     sendWSM(wsm);
     debug("send ack to " + dst);
 }
@@ -170,7 +170,7 @@ void DDash11p::sendAck(std::string src, std::string dst, std::string data) {
     wsm->setSrc(src.c_str());
     wsm->setDst(dst.c_str());
     wsm->setWsmData(data.c_str());
-    wsm->setGroup(getGroup().c_str());
+    wsm->setGroup(getGroupName().c_str());
     sendWSM(wsm);
     debug("send ack to ping request to " + dst + " from " + data);
 }
@@ -383,14 +383,14 @@ void DDash11p::handlePositionUpdate(cObject* obj) {
 
 void DDash11p::handleAccidentStart() {
     debug("*** Start Accident ***");
-    setColor("r=16,red");
+    setDisplay("r=16,red");
     traciVehicle->setSpeed(0);
 }
 
 
 void DDash11p::handleAccidentStop() {
     debug("*** End Accident ***");
-    setColor("r=0,-");
+    setDisplay("r=0,-");
     traciVehicle->setSpeed(-1);
 }
 
