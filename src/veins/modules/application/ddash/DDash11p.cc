@@ -57,7 +57,7 @@ void DDash11p::sendJoin(){
     NodeMsgs joinList;
     joinList.push_front(getMyName());
 
-    wsm = prepareWSM(getMyName(), beaconLengthBits, type_CCH, beaconPriority, 0, -1);
+    wsm = prepareWSM("Join", beaconLengthBits, type_CCH, beaconPriority, 0, -1);
     wsm->setKind(PING);
     wsm->setJoinMsgs(joinList);
     wsm->setSrc(getMyName().c_str());
@@ -73,10 +73,30 @@ void DDash11p::sendJoin(){
 }
 
 
+void DDash11p::sendCritical() {
+    WaveShortMessage *wsm;
+    NodeMsgs crits;
+
+    crits.push_front(getGroupName());
+
+    wsm = prepareWSM("ACCIDENT", beaconLengthBits, type_CCH, beaconPriority, 0, -1);
+    wsm->setKind(PING);
+    wsm->setSrc(getMyName().c_str());
+    wsm->setCriticalMsgs(crits);
+
+    // Broadcast
+    wsm->setDst("*");
+    wsm->setGroup("*");
+
+    sendWSM(wsm);
+    debug("Sent accident");
+}
+
+
 void DDash11p::sendPing(const char* node){
     WaveShortMessage *wsm;
 
-    wsm = prepareWSM("", beaconLengthBits, type_CCH, beaconPriority, 0, -1);
+    wsm = prepareWSM("Ping", beaconLengthBits, type_CCH, beaconPriority, 0, -1);
     wsm->setKind(PING);
     setUpdateMsgs(wsm);
 
@@ -127,7 +147,7 @@ void DDash11p::sendPingReq(std::string nodeName){
         }
 
 
-        WaveShortMessage *wsm = prepareWSM("", beaconLengthBits, type_CCH, beaconPriority, 0, -1);
+        WaveShortMessage *wsm = prepareWSM("PingReq", beaconLengthBits, type_CCH, beaconPriority, 0, -1);
         wsm->setKind(PINGREQ);
         setUpdateMsgs(wsm);
 
@@ -214,6 +234,7 @@ void DDash11p::sendMessage(std::string blockedRoadId) {
 void DDash11p::sendWSM(WaveShortMessage* wsm) {
     wsm->setSenderPath(this->getParentModule()->getFullPath().c_str());
     sendDelayedDown(wsm,individualOffset);
+    debug("Send delayed down");
 }
 
 /**********************************************************************************
@@ -223,6 +244,13 @@ void DDash11p::sendWSM(WaveShortMessage* wsm) {
  **********************************************************************************/
 
 void DDash11p::onPing(WaveShortMessage* wsm){
+    debug("Group: " + std::string(wsm->getGroup()) +
+            " Src: " + std::string(wsm->getSrc()) +
+            " Dst: " + std::string(wsm->getDst()));
+
+    if(isMyGroup(wsm)) {debug("Group matches");}
+    if(isForMe(wsm)) {debug("Me matches");}
+
     if(isMyGroup(wsm) && isForMe(wsm)) {
         std::string sender = std::string(wsm->getSrc());
         debug("PING from " + sender);
@@ -393,8 +421,11 @@ void DDash11p::handlePositionUpdate(cObject* obj) {
 
 void DDash11p::handleAccidentStart() {
     debug("*** Start Accident ***");
+
     setDisplay("r=16,red");
     traciVehicle->setSpeed(0);
+
+    sendCritical();
 }
 
 
@@ -448,8 +479,8 @@ const char* DDash11p::getNextNode() {
 
     do {
         debug("Getting next PING target");
-        std::cout << "lastidx: " << lastIdx << endl;
-        std::cout << "nodelist: " << nodeList.size() << endl;
+        //std::cout << "lastidx: " << lastIdx << endl;
+        //std::cout << "nodelist: " << nodeList.size() << endl;
 
         if(count == nodeMap.size() || nodeList.size() == lastIdx) {
             next = "";
@@ -522,9 +553,20 @@ void DDash11p::setUpdateMsgs(WaveShortMessage* wsm) {
 
 // update join and leave membership list through receiving message
 void DDash11p::getUpdateMsgs(WaveShortMessage* wsm) {
+    int gateNum;
     NodeMsgs joins = wsm->getJoinMsgs();
     NodeMsgs leaves = wsm->getLeaveMsgs();
-    int gateNum;
+    NodeMsgs crits = wsm->getCriticalMsgs();
+
+    for(std::string s: crits) {
+        debug("Accident(" + s + "). Rerouting...");
+
+        if(s.compare(getGroupName())) {
+        traciVehicle->changeRoute(s, 9999);
+        } else {
+            debug("Unavoidable");
+        }
+    }
 
     for(std::string s: joins) {
         if(!s.compare(getMyName())) {

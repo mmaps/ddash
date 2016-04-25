@@ -64,6 +64,7 @@ class BaseWaveApplLayer : public BaseApplLayer {
 			PING,
 			PINGREQ,
 			ACK,
+			CRITICAL
 		};
 
 		enum NodeStatus {

@@ -72,6 +72,7 @@ class DDash11p : public BaseWaveApplLayer {
 		virtual void handleSelfMsg(cMessage *msg);
 
 		virtual void sendJoin();
+		virtual void sendCritical();
 		virtual void sendPing(const char* nodeName);
 		virtual void sendPingReq(std::string suspciousNode);
 		virtual void sendFail(std::string failedNode);
@@ -138,7 +139,7 @@ class DDash11p : public BaseWaveApplLayer {
 		}
 
 		inline bool isMyGroup(WaveShortMessage* wsm) {
-		    return std::string(wsm->getGroup()) == mobility->getRoadId();
+		    return std::string(wsm->getGroup()) == mobility->getRoadId() || std::string(wsm->getGroup()) == std::string("*");
 		}
 
 		inline bool isPingReqAck(std::string src) {
