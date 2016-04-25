@@ -75,21 +75,18 @@ void DDash11p::sendJoin(){
 
 void DDash11p::sendCritical() {
     WaveShortMessage *wsm;
-    NodeMsgs crits;
-
-    crits.push_front(getGroupName());
+    critMsgs.push_front(getGroupName());
 
     wsm = prepareWSM("ACCIDENT", beaconLengthBits, type_CCH, beaconPriority, 0, -1);
     wsm->setKind(PING);
     wsm->setSrc(getMyName().c_str());
-    wsm->setCriticalMsgs(crits);
+    wsm->setCriticalMsgs(critMsgs);
 
     // Broadcast
     wsm->setDst("*");
     wsm->setGroup("*");
 
     sendWSM(wsm);
-    debug("Sent accident");
 }
 
 
@@ -234,7 +231,6 @@ void DDash11p::sendMessage(std::string blockedRoadId) {
 void DDash11p::sendWSM(WaveShortMessage* wsm) {
     wsm->setSenderPath(this->getParentModule()->getFullPath().c_str());
     sendDelayedDown(wsm,individualOffset);
-    debug("Send delayed down");
 }
 
 /**********************************************************************************
@@ -334,7 +330,6 @@ void DDash11p::handleSelfMsg(cMessage* msg) {
             if(nodeMap.empty()) {
                 sendJoin();
             } else {
-
                 const char* nodeName = getNextNode();
                 if(nodeName == nullptr) {
                     if(!sentNoOneDbgMsg) {
@@ -549,6 +544,8 @@ void DDash11p::setUpdateMsgs(WaveShortMessage* wsm) {
         msgs.push_front(it->first);
     }
     wsm->setLeaveMsgs(msgs);
+
+    wsm->setCriticalMsgs(critMsgs);
 }
 
 // update join and leave membership list through receiving message

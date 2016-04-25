@@ -8,6 +8,7 @@
     <flow id="flow4" color="1,0,1" begin="10" end="10000" period="20" type="car" route="route0"/>
 	-->
     <flow id="cars1" color="1,0,1" begin="1" end="11" period="20" type="car" route="route0"/>
-    <flow id="cars2" color="1,0,1" begin="15" end="16" period="20" type="car" route="route1"/>
-    <flow id="cars3" color="1,0,1" begin="3" end="13" period="20" type="car" route="route2"/>
+    
+    <flow id="cars2" color="1,0,1" begin="3" end="13" period="20" type="car" route="route2"/>
+    <flow id="cars3" color="1,0,1" begin="15" end="16" period="20" type="car" route="route1"/>
 </routes>

@@ -57,6 +57,7 @@ class DDash11p : public BaseWaveApplLayer {
         int leaveMax = -1;
         NodeList leaveMaxes;
         NodeList nodeList;
+        NodeMsgs critMsgs;
         std::map<std::string, std::map<std::string, cMessage*>> pingReqTimers;
         std::map<std::string, std::string> pingReqSent;
         unsigned lastIdx;

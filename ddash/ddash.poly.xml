@@ -1,6 +1,6 @@
 <shapes>
-    <poly id="bldg1" type="building" color="1.00,0.00,0.00" fill="1" layer="4" shape="90,190 90,110 10,110 10,190"/>
-    <poly id="bldg2" type="building" color="1.00,0.00,0.00" fill="1" layer="4" shape="10,90 90,90 90,10 10,10"/>
-    <poly id="bldg3" type="building" color="1.00,0.00,0.00" fill="1" layer="4" shape="110,190 190,190 190,110 110,110"/>
-    <poly id="bldg4" type="building" color="1.00,0.00,0.00" fill="1" layer="4" shape="110,90 190,90 190,10 110,10"/>
+    <poly id="bldg1" type="building" color="red" fill="1" layer="4" shape="90,190 90,110 10,110 10,190"/>
+    <!-- <poly id="bldg2" type="building" color="green" fill="1" layer="4" shape="10,90 90,90 90,10 10,10"/> -->
+    <poly id="bldg3" type="building" color="blue" fill="1" layer="4" shape="110,190 190,190 190,110 110,110"/>
+    <poly id="bldg4" type="building" color="yellow" fill="1" layer="4" shape="110,90 190,90 190,10 110,10"/>
 </shapes>
