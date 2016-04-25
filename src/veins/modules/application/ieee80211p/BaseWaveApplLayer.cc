@@ -105,7 +105,6 @@ void BaseWaveApplLayer::handlePositionUpdate(cObject* obj) {
 void BaseWaveApplLayer::handleLowerMsg(cMessage* msg) {
 	WaveShortMessage* wsm = dynamic_cast<WaveShortMessage*>(msg);
 	ASSERT(wsm);
-	std::cout << "Handle Lower: " + std::string(wsm->getSrc()) + " to " + std::string(wsm->getGroup()) + " member " + std::string(wsm->getDst()) << endl;
 
 	switch(msg->getKind()) {
 	case PING:

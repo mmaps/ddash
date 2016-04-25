@@ -73,14 +73,14 @@ void DDash11p::sendJoin(){
 }
 
 
-void DDash11p::sendCritical() {
+void DDash11p::sendCritical(std::string roadId) {
     WaveShortMessage *wsm;
-    critMsgs.push_front(getGroupName());
+    critMsgs[roadId]++;
 
     wsm = prepareWSM("ACCIDENT", beaconLengthBits, type_CCH, beaconPriority, 0, -1);
     wsm->setKind(PING);
     wsm->setSrc(getMyName().c_str());
-    wsm->setCriticalMsgs(critMsgs);
+    setCriticalMsgs(wsm);
 
     // Broadcast
     wsm->setDst("*");
@@ -106,6 +106,11 @@ void DDash11p::sendPing(const char* node){
 
     debug("PING " + std::string(node));
 
+    if(!critMsgs.empty()) {
+        for(NodeMap::iterator it=critMsgs.begin(); it!=critMsgs.end(); it++) {
+            sendCritical(it->first);
+        }
+    }
 }
 
 
@@ -240,19 +245,14 @@ void DDash11p::sendWSM(WaveShortMessage* wsm) {
  **********************************************************************************/
 
 void DDash11p::onPing(WaveShortMessage* wsm){
-    debug("Group: " + std::string(wsm->getGroup()) +
-            " Src: " + std::string(wsm->getSrc()) +
-            " Dst: " + std::string(wsm->getDst()));
-
-    if(isMyGroup(wsm)) {debug("Group matches");}
-    if(isForMe(wsm)) {debug("Me matches");}
-
     if(isMyGroup(wsm) && isForMe(wsm)) {
         std::string sender = std::string(wsm->getSrc());
         debug("PING from " + sender);
-        saveNodeInfo(wsm);
+        if(!isBroadcast(wsm)) {
+            saveNodeInfo(wsm);
+            sendAck(sender);
+        }
         getUpdateMsgs(wsm);
-        sendAck(sender);
     }
 }
 
@@ -288,8 +288,6 @@ void DDash11p::onAck(WaveShortMessage* wsm){
             sendAck(getMyName(), pingReqSent[src], src);
             pingReqSent.erase(src);
         }
-    } else {
-        debug("Ignore ack for " + std::string(wsm->getDst()));
     }
 }
 
@@ -420,7 +418,7 @@ void DDash11p::handleAccidentStart() {
     setDisplay("r=16,red");
     traciVehicle->setSpeed(0);
 
-    sendCritical();
+    sendCritical(getGroupName());
 }
 
 
@@ -545,7 +543,16 @@ void DDash11p::setUpdateMsgs(WaveShortMessage* wsm) {
     }
     wsm->setLeaveMsgs(msgs);
 
-    wsm->setCriticalMsgs(critMsgs);
+    msgs.clear();
+
+}
+
+void DDash11p::setCriticalMsgs(WaveShortMessage* wsm) {
+    NodeMsgs msgs;
+    for(NodeMap::iterator it=critMsgs.begin(); it!=critMsgs.end(); it++) {
+        msgs.push_front(it->first);
+    }
+    wsm->setCriticalMsgs(msgs);
 }
 
 // update join and leave membership list through receiving message
@@ -556,13 +563,20 @@ void DDash11p::getUpdateMsgs(WaveShortMessage* wsm) {
     NodeMsgs crits = wsm->getCriticalMsgs();
 
     for(std::string s: crits) {
-        debug("Accident(" + s + "). Rerouting...");
+
+        critMsgs[s]++;
 
         if(s.compare(getGroupName())) {
-        traciVehicle->changeRoute(s, 9999);
+            if(critMsgs[s] == 1) {
+                debug("Accident(" + s + "). Re-routing...");
+                traciVehicle->changeRoute(s, 9999);
+                setDisplay("r=8,yellow");
+            }
         } else {
-            debug("Unavoidable");
+            debug("Accident(" + s + "). Unavoidable!");
         }
+
+
     }
 
     for(std::string s: joins) {
@@ -570,8 +584,6 @@ void DDash11p::getUpdateMsgs(WaveShortMessage* wsm) {
             continue;
         }
 
-        gateNum = connectGroupMember(wsm->getSenderPath());
-        groupConns[s] = gateNum;
 
         debug("Update= join(" + s + ")");
         joinMsgs[s]++;
@@ -583,7 +595,8 @@ void DDash11p::getUpdateMsgs(WaveShortMessage* wsm) {
         if(!isMyName(s) && !hasNode(s)) {
              debug("New node " + s);
              addNode(s.c_str());
-
+             gateNum = connectGroupMember(wsm->getSenderPath());
+             groupConns[s] = gateNum;
         }
     }
 
@@ -635,7 +648,7 @@ int DDash11p::connectGroupMember(const char* name) {
         cChan = thatGate->connectTo(thisGate, cIdealChannel::create("test"));
 
         if(cChan) {
-            cChan->getDisplayString().parse("ls=red,3");
+            cChan->getDisplayString().parse("ls=blue,3");
         }
     }
 

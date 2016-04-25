@@ -1,17 +1,21 @@
 <?xml version="1.0"?>
 <!-- debug config -->
 <launch>
+	<!--
 	<copy file="ddash.net.xml" />
 	<copy file="ddash.rou.xml" />
 	<copy file="ddash.poly.xml" />
 	<copy file="ddash.sumo.cfg" type="config" />
-	<!--
+
 	
 	<copy file="cmu.net.xml" />
 	<copy file="cmuforbes.rou.xml" />
 	<copy file="cmu.poly.xml" />
 	<copy file="cmu.sumo.cfg" type="config" />
 		-->
-	
+	<copy file="longgrid.net.xml" />
+	<copy file="longgrid.rou.xml" />
+	<copy file="longgrid.sumo.cfg" type="config" />
 </launch>
 
+ 

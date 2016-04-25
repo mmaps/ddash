@@ -18,6 +18,7 @@ typedef std::vector<std::string> NodeList;
 typedef std::list<std::string> NodeMsgs;
 
 #define LRU_SIZE 10
+#define CRIT_RESEND_NUM 1000
 
 class DDash11p : public BaseWaveApplLayer {
 	public:
@@ -57,7 +58,7 @@ class DDash11p : public BaseWaveApplLayer {
         int leaveMax = -1;
         NodeList leaveMaxes;
         NodeList nodeList;
-        NodeMsgs critMsgs;
+        NodeMap critMsgs;
         std::map<std::string, std::map<std::string, cMessage*>> pingReqTimers;
         std::map<std::string, std::string> pingReqSent;
         unsigned lastIdx;
@@ -73,7 +74,7 @@ class DDash11p : public BaseWaveApplLayer {
 		virtual void handleSelfMsg(cMessage *msg);
 
 		virtual void sendJoin();
-		virtual void sendCritical();
+		virtual void sendCritical(std::string roadId);
 		virtual void sendPing(const char* nodeName);
 		virtual void sendPingReq(std::string suspciousNode);
 		virtual void sendFail(std::string failedNode);
@@ -92,6 +93,7 @@ class DDash11p : public BaseWaveApplLayer {
 		void setTimer(const char* src, const char* dst, const char* data);
 		void removeFromList(std::string name);
 		void setUpdateMsgs(WaveShortMessage *wsm);
+		void setCriticalMsgs(WaveShortMessage *wsm);
 		void getUpdateMsgs(WaveShortMessage *wsm);
 		void handleAccidentStart();
 		void handleAccidentStop();
@@ -142,6 +144,14 @@ class DDash11p : public BaseWaveApplLayer {
 		inline bool isMyGroup(WaveShortMessage* wsm) {
 		    return std::string(wsm->getGroup()) == mobility->getRoadId() || std::string(wsm->getGroup()) == std::string("*");
 		}
+
+		inline bool isBroadcast(WaveShortMessage* wsm) {
+		    return std::string(wsm->getGroup()) == std::string("*");
+		}
+
+		inline bool isMulticast(WaveShortMessage* wsm) {
+		            return std::string(wsm->getDst()) == std::string("*");
+        }
 
 		inline bool isPingReqAck(std::string src) {
 		    return pingReqSent.find(src) != pingReqSent.end();

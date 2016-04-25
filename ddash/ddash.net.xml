@@ -9,9 +9,11 @@
         <grid value="true"/>
         <grid.number value="3"/>
     </grid_network>
-
+    <input>
+        <sumo-net-file value="ddash.net.xml"/>
+    </input>
     <output>
-        <output-file value="net.net.xml"/>
+        <output-file value="ddash.net.xml"/>
     </output>
 
     <tls_building>
@@ -21,8 +23,13 @@
     <processing>
         <no-turnarounds value="true"/>
         <no-turnarounds.tls value="true"/>
+                <offset.disable-normalization value="true"/>
+        <lefthand value="false"/>
+        <junctions.corner-detail value="0"/>
     </processing>
-
+    <visualisation>
+        <registry-viewport value="true"/>
+    </visualisation>
 </configuration>
 -->
 
