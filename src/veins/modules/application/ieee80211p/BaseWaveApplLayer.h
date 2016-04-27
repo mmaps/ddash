@@ -101,6 +101,7 @@ class BaseWaveApplLayer : public BaseApplLayer {
 		Coord curPosition;
 		int mySCH;
 		int myId;
+        unsigned int uid;
 
 		cMessage* sendBeaconEvt;
 

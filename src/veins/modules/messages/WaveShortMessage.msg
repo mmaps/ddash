@@ -74,6 +74,8 @@ packet WaveShortMessage {
 	//Used to draw groups
 	string senderPath;
 	
+	//Used for leader election
+	unsigned int srcUid;
 		
 	int senderAddress = 0;
 	int recipientAddress = -1;

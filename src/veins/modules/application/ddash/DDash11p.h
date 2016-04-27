@@ -49,7 +49,6 @@ class DDash11p : public BaseWaveApplLayer {
         cMessage *startAccidentMsg;
         cMessage *stopAccidentMsg;
         NodeMap nodeMap;
-        NodeMap groupConns;
         NodeMap::iterator mapIter;
         NodeMap joinMsgs;
         int joinMax = -1;
@@ -63,6 +62,8 @@ class DDash11p : public BaseWaveApplLayer {
         std::map<std::string, std::string> pingReqSent;
         unsigned lastIdx;
         std::string groupName;
+        std::map<std::string, cGate*> groupConns;
+        bool drawGroups;
 
 	protected:
 		virtual void onBeacon(WaveShortMessage* wsm);
@@ -80,7 +81,6 @@ class DDash11p : public BaseWaveApplLayer {
 		virtual void sendFail(std::string failedNode);
 		virtual void sendAck(std::string dst);
 		virtual void sendAck(std::string sendTo, std::string destNode, std::string wsmData);
-		virtual void forwardAck(WaveShortMessage* wsm);
 
         virtual void onPing(WaveShortMessage* wsm);
         virtual void onPingReq(WaveShortMessage* wsm);
@@ -88,7 +88,7 @@ class DDash11p : public BaseWaveApplLayer {
 
         void saveNodeInfo(WaveShortMessage *wsm);
         const char* getNextNode();
-		void addNode(const char* name);
+		void addNode(const char* path, std::string name);
 		void failNode(std::string name);
 		void setTimer(const char* src, const char* dst, const char* data);
 		void removeFromList(std::string name);
@@ -97,8 +97,8 @@ class DDash11p : public BaseWaveApplLayer {
 		void getUpdateMsgs(WaveShortMessage *wsm);
 		void handleAccidentStart();
 		void handleAccidentStop();
-		void disconnectGroupMember(int gateNum);
-		int connectGroupMember(const char* name);
+		void disconnectGroupMember(std::string name);
+		void connectGroupMember(const char* path, std::string name);
 		/******************************************************************
 		 *
 		 * Simple Methods. Can be made inline
@@ -134,6 +134,11 @@ class DDash11p : public BaseWaveApplLayer {
 		}
 
 		inline bool hasNode(NodeMap someMap, std::string key) {
+		    return someMap.find(key) != someMap.end();
+		}
+
+		template <class someValue>
+		inline bool hasNode(std::map<std::string, someValue *> someMap, std::string key) {
 		    return someMap.find(key) != someMap.end();
 		}
 
@@ -206,7 +211,7 @@ class DDash11p : public BaseWaveApplLayer {
 		}
 
 		void debug(std::string msg) {
-		    std::cout <<  simTime().dbl() << " (" << getGroupName() << ") " << getMyName() << ": " << msg << endl;
+		    //std::cout <<  simTime().dbl() << " (" << getGroupName() << ") " << getMyName() << ": " << msg << endl;
 		}
 };
 

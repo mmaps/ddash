@@ -55,6 +55,7 @@ void BaseWaveApplLayer::initialize(int stage) {
 		if (sendBeacons) {
 			scheduleAt(simTime() + offSet, sendBeaconEvt);
 		}
+        uid = rand();
 
 	}
 }
@@ -76,6 +77,9 @@ WaveShortMessage*  BaseWaveApplLayer::prepareWSM(std::string name, int lengthBit
 	wsm->setRecipientAddress(rcvId);
 	wsm->setSenderPos(curPosition);
 	wsm->setSerial(serial);
+
+	// Used for leaders
+	wsm->setSrcUid(uid);
 
 	// Used for groups
 	wsm->setSenderPath(this->getFullPath().c_str());

@@ -43,6 +43,9 @@ void DDash11p::initialize(int stage) {
             stopAccidentMsg->setKind(STOP_ACC);
             scheduleAt(simTime() + accidentStart, startAccidentMsg);
         }
+
+        drawGroups = par("drawGroups");
+
     }
 }
 
@@ -104,7 +107,7 @@ void DDash11p::sendPing(const char* node){
 
     nodeMap[std::string(node)] = PINGWAIT;
 
-    debug("PING " + std::string(node));
+    //debug("PING " + std::string(node));
 
     if(!critMsgs.empty()) {
         for(NodeMap::iterator it=critMsgs.begin(); it!=critMsgs.end(); it++) {
@@ -177,7 +180,7 @@ void DDash11p::sendAck(std::string dst) {
     wsm->setWsmData("");
     wsm->setGroup(getGroupName().c_str());
     sendWSM(wsm);
-    debug("send ack to " + dst);
+    //debug("send ack to " + dst);
 }
 
 
@@ -189,14 +192,10 @@ void DDash11p::sendAck(std::string src, std::string dst, std::string data) {
     wsm->setWsmData(data.c_str());
     wsm->setGroup(getGroupName().c_str());
     sendWSM(wsm);
-    debug("send ack to ping request to " + dst + " from " + data);
+    //debug("send ack to ping request to " + dst + " from " + data);
 }
 
 
-void DDash11p::forwardAck(WaveShortMessage* wsm) {}
-
-// TODO need to remove this and add the node to leaveMsgs instead
-// remove from own list, and then multicast its own list to the membership list
 void DDash11p::sendFail(std::string nodeName) {
     debug("Preparing to send failing message: " + nodeName);
     WaveShortMessage* wsm = prepareWSM("Failure Detector msg", beaconLengthBits, type_CCH, beaconPriority, 0, -1);
@@ -247,7 +246,7 @@ void DDash11p::sendWSM(WaveShortMessage* wsm) {
 void DDash11p::onPing(WaveShortMessage* wsm){
     if(isMyGroup(wsm) && isForMe(wsm)) {
         std::string sender = std::string(wsm->getSrc());
-        debug("PING from " + sender);
+        //debug("PING from " + sender);
         if(!isBroadcast(wsm)) {
             saveNodeInfo(wsm);
             sendAck(sender);
@@ -258,7 +257,7 @@ void DDash11p::onPing(WaveShortMessage* wsm){
 
 void DDash11p::onPingReq(WaveShortMessage* wsm) {
     if(isMyGroup(wsm) && isForMe(wsm)) {
-        debug("PING REQ received from " + std::string(wsm->getSrc()) + " for " + std::string(wsm->getWsmData()));
+        //debug("PING REQ received from " + std::string(wsm->getSrc()) + " for " + std::string(wsm->getWsmData()));
         saveNodeInfo(wsm);
         getUpdateMsgs(wsm);
         setTimer(wsm->getSrc(), wsm->getWsmData(), "");
@@ -272,10 +271,10 @@ void DDash11p::onAck(WaveShortMessage* wsm){
     std::string data = std::string(wsm->getWsmData());
 
     if(isMyGroup(wsm) && isForMe(wsm)) {
-        debug("ACK from " + src + ", data: " + data);
+        //debug("ACK from " + src + ", data: " + data);
 
         if(!hasNode(src)) {
-            addNode(src.c_str());
+            addNode(wsm->getSenderPath(), src);
         } else {
             nodeMap[src] = ALIVE;
         }
@@ -360,6 +359,7 @@ void DDash11p::handleSelfMsg(cMessage* msg) {
                 // timeout msg from middle node to suspicious node
                 debug("Timeout on PINGWAIT2. Fail(" + dst + ")");
                 failNode(dst);
+
             } else if(nodeMap[dst] == PINGREQWAIT) {
                 debug("Timeout on PINGREQ. Resetting " + dst);
                 nodeMap[dst] = ALIVE;
@@ -396,18 +396,29 @@ void DDash11p::handlePositionUpdate(cObject* obj) {
         leaveMsgs.clear();
         joinMsgs.clear();
         groupConns.clear();
+
+        std::cout << getMyName() << " clearing gIn. size: " << this->getParentModule()->gateSize("gIn");
         for(int i=0; i<this->getParentModule()->gateSize("gIn"); i++) {
             cg = this->getParentModule()->gate("gIn", i);
             if(cg) {
+                std::cout << ", " << i;
                 cg->disconnect();
             }
         }
+        std::cout << "final size=" << this->getParentModule()->gateSize("gIn") << endl;
+
+        std::cout << getMyName() << " clearing gOut. size: " << this->getParentModule()->gateSize("gOut");
         for(int i=0; i<this->getParentModule()->gateSize("gOut"); i++) {
             cg = this->getParentModule()->gate("gOut", i);
             if(cg) {
+                std::cout << ", " << i;
                 cg->disconnect();
+                if(cg->getChannel()) {
+                    std::cout << " channel exists, ";
+                }
             }
         }
+        std::cout << "final size=" << this->getParentModule()->gateSize("gOut") << endl;
     }
 }
 
@@ -438,7 +449,7 @@ void DDash11p::saveNodeInfo(WaveShortMessage *wsm) {
     const char* sender = wsm->getSrc();
     if(!hasNode(sender)) {
         debug("Sender is new: " + std::string(sender));
-        addNode(sender);
+        addNode(wsm->getSenderPath(), std::string(sender));
     }
 }
 
@@ -448,16 +459,24 @@ void DDash11p::failNode(std::string name) {
     leaveMsgs[name]++;
     removeFromList(name);
     nodeMap.erase(name);
+    disconnectGroupMember(name);
 }
 
 
-void DDash11p::addNode(const char* name) {
-    if(!hasNode(name)) {
-        debug("addNode " + std::string(name));
-        nodeList.push_back(std::string(name));
+void DDash11p::addNode(const char* path, std::string name) {
+    if(hasNode(nodeMap, name)) {
+        return;
     }
 
+    debug("addNode " + std::string(name));
+
+    nodeList.push_back(std::string(name));
+
     nodeMap[std::string(name)] = ALIVE;
+
+    if(drawGroups) {
+        connectGroupMember(path, name);
+    }
 
     if(nodeMap.size() == 1) {
         mapIter = nodeMap.begin();
@@ -471,7 +490,7 @@ const char* DDash11p::getNextNode() {
     size_t count = 0;
 
     do {
-        debug("Getting next PING target");
+        //debug("Getting next PING target");
         //std::cout << "lastidx: " << lastIdx << endl;
         //std::cout << "nodelist: " << nodeList.size() << endl;
 
@@ -557,7 +576,6 @@ void DDash11p::setCriticalMsgs(WaveShortMessage* wsm) {
 
 // update join and leave membership list through receiving message
 void DDash11p::getUpdateMsgs(WaveShortMessage* wsm) {
-    int gateNum;
     NodeMsgs joins = wsm->getJoinMsgs();
     NodeMsgs leaves = wsm->getLeaveMsgs();
     NodeMsgs crits = wsm->getCriticalMsgs();
@@ -594,9 +612,7 @@ void DDash11p::getUpdateMsgs(WaveShortMessage* wsm) {
 
         if(!isMyName(s) && !hasNode(s)) {
              debug("New node " + s);
-             addNode(s.c_str());
-             gateNum = connectGroupMember(wsm->getSenderPath());
-             groupConns[s] = gateNum;
+             addNode(wsm->getSenderPath(), s.c_str());
         }
     }
 
@@ -612,10 +628,7 @@ void DDash11p::getUpdateMsgs(WaveShortMessage* wsm) {
         }
         removeFromList(s);
         nodeMap.erase(s);
-        if(hasNode(groupConns, s)) {
-            disconnectGroupMember(groupConns[s]);
-            groupConns.erase(s);
-        }
+        disconnectGroupMember(s);
     }
 
     if(leaveMsgs.size() > LRU_SIZE) {
@@ -630,34 +643,57 @@ void DDash11p::getUpdateMsgs(WaveShortMessage* wsm) {
 }
 
 
-int DDash11p::connectGroupMember(const char* name) {
+void DDash11p::connectGroupMember(const char* path, std::string name) {
     cModule *thatMod, *thisMod;
     cGate *thatGate, *thisGate;
-    int thatSize, thisSize;
+    int thatSize=0, thisSize;
     cChannel *cChan;
 
-    thatMod = simulation.getModuleByPath(name);
+    if(hasNode(groupConns, name)) {
+        //std::cout << getMyName() << " duplicate: " << name << endl;
+        return;
+    }
+
+    thatMod = simulation.getModuleByPath(path);
     thisMod = this->getParentModule();
+
     if(thatMod) {
-        thatSize = thatMod->gateSize("gOut") + 1;
-        thisSize = thisMod->gateSize("gIn") + 1;
-        thatMod->setGateSize("gOut", thatSize);
-        thisMod->setGateSize("gIn", thisSize);
-        thatGate = thatMod->gate("gOut", thatSize-1);
-        thisGate = thisMod->gate("gIn", thisSize-1);
-        cChan = thatGate->connectTo(thisGate, cIdealChannel::create("test"));
+        thatSize = thatMod->gateSize("gIn") + 1;
+        thisSize = thisMod->gateSize("gOut") + 1;
+
+        thatMod->setGateSize("gIn", thatSize);
+        thisMod->setGateSize("gOut", thisSize);
+
+        thatGate = thatMod->gate("gIn", thatSize-1);
+        thisGate = thisMod->gate("gOut", thisSize-1);
+
+        cChan = thisGate->connectTo(thatGate, cIdealChannel::create("test"));
 
         if(cChan) {
             cChan->getDisplayString().parse("ls=blue,3");
         }
     }
 
-    return thatSize-1;
+    //std::cout << getMyName() <<" Connecting gate num: "<< name << " "<<  thisSize-1 << " Total=" << thisSize << endl;
+
+    groupConns[name] = thisGate;
 }
 
 
-void DDash11p::disconnectGroupMember(int gateNum) {
-    if(gateNum < this->getParentModule()->gateSize("gIn")) {
-        this->getParentModule()->gate("gIn", gateNum)->disconnect();
+void DDash11p::disconnectGroupMember(std::string name) {
+    if(hasNode(groupConns, name)) {
+
+        //std::cout<<  getMyName() <<" Disconnecting: "<< name;
+
+        groupConns[name]->disconnect();
+        //std::cout <<endl;
+        groupConns.erase(name);
+    } else {
+        //std::cout << getMyName() << " not connected to " << name << endl;
+
+        //for(std::map<std::string, cGate*>::iterator it=groupConns.begin(); it!=groupConns.end(); it++) {
+            //std:: cout << it->first << ", ";
+        //}
+        //std::cout << endl;
     }
 }
