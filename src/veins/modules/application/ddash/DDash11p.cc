@@ -144,7 +144,9 @@ void DDash11p::sendPing(const char* node){
     if(isLeader() && !critMsgs.empty()) {
         debug("I'm the leader sending ACCIDENT");
         for(NodeMap::iterator it=critMsgs.begin(); it!=critMsgs.end(); it++) {
+            if(it->second < CRIT_RESEND_NUM) {
             sendCritical(it->first);
+            }
         }
     }
 }
