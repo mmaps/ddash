@@ -117,6 +117,7 @@ void DDash11p::sendPing(const char* node){
     debug("PING " + std::string(node));
 
     if(isLeader() && !critMsgs.empty()) {
+        debug("I'm the leader sending ACCIDENT");
         for(NodeMap::iterator it=critMsgs.begin(); it!=critMsgs.end(); it++) {
             sendCritical(it->first);
         }
@@ -622,7 +623,6 @@ void DDash11p::getUpdateMsgs(WaveShortMessage* wsm) {
         if(!s.compare(getMyName())) {
             continue;
         }
-
 
         //debug("Update= join(" + s + ")");
         joinMsgs[s]++;

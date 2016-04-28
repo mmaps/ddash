@@ -121,7 +121,7 @@ class DDash11p : public BaseWaveApplLayer {
 		}
 
 		inline bool isLeader() {
-		    return getMyName().compare(leadName);
+		    return !getMyName().compare(leadName);
 		}
 
 		inline bool roadChanged() {
