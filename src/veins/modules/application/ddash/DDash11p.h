@@ -14,6 +14,7 @@ using Veins::TraCIMobility;
 using Veins::TraCICommandInterface;
 using Veins::AnnotationManager;
 typedef std::map<std::string, int> NodeMap;
+typedef std::map<std::string, unsigned int> NodeUidMap;
 typedef std::vector<std::string> NodeList;
 typedef std::list<std::string> NodeMsgs;
 
@@ -48,6 +49,7 @@ class DDash11p : public BaseWaveApplLayer {
         simtime_t accidentDuration;
         cMessage *startAccidentMsg;
         cMessage *stopAccidentMsg;
+        NodeUidMap uidMap;
         NodeMap nodeMap;
         NodeMap::iterator mapIter;
         NodeMap joinMsgs;
@@ -60,10 +62,13 @@ class DDash11p : public BaseWaveApplLayer {
         NodeMap critMsgs;
         std::map<std::string, std::map<std::string, cMessage*>> pingReqTimers;
         std::map<std::string, std::string> pingReqSent;
-        unsigned lastIdx;
+        unsigned int lastIdx;
         std::string groupName;
         std::map<std::string, cGate*> groupConns;
         bool drawGroups;
+        std::string leadName;
+        unsigned int leadUid;
+        bool debugging;
 
 	protected:
 		virtual void onBeacon(WaveShortMessage* wsm);
@@ -77,7 +82,7 @@ class DDash11p : public BaseWaveApplLayer {
 		virtual void sendJoin();
 		virtual void sendCritical(std::string roadId);
 		virtual void sendPing(const char* nodeName);
-		virtual void sendPingReq(std::string suspciousNode);
+		virtual int sendPingReq(std::string suspciousNode);
 		virtual void sendFail(std::string failedNode);
 		virtual void sendAck(std::string dst);
 		virtual void sendAck(std::string sendTo, std::string destNode, std::string wsmData);
@@ -99,6 +104,8 @@ class DDash11p : public BaseWaveApplLayer {
 		void handleAccidentStop();
 		void disconnectGroupMember(std::string name);
 		void connectGroupMember(const char* path, std::string name);
+
+		void checkLeader();
 		/******************************************************************
 		 *
 		 * Simple Methods. Can be made inline
@@ -111,6 +118,10 @@ class DDash11p : public BaseWaveApplLayer {
 		inline std::string getGroupName() {
 		    // Updated in handlePositionUpdate
 		    return groupName;
+		}
+
+		inline bool isLeader() {
+		    return getMyName().compare(leadName);
 		}
 
 		inline bool roadChanged() {
@@ -165,6 +176,22 @@ class DDash11p : public BaseWaveApplLayer {
 		inline void setDisplay(const char* color) {
 		    findHost()->getDisplayString().updateWith(color);
 		}
+
+		inline int findEmptyGate(cModule *mod, const char* gate) {
+		    int gSize = mod->gateSize(gate);
+
+		    for(int i=0; i<gSize; i++) {
+		        if(!(mod->gate(gate, i)->isConnectedInside()) && !(mod->gate(gate, i)->isConnectedOutside())){
+		            return i + 1;
+		        }
+		    }
+
+		    gSize++;
+		    mod->setGateSize(gate, gSize);
+		    return gSize;
+		}
+
+
         /******************************************************************
          *
          * Debug Methods
@@ -172,10 +199,11 @@ class DDash11p : public BaseWaveApplLayer {
          ******************************************************************/
 		inline void dumpMap() {
 		    std::ostringstream os;
-		    os << "MAP: " << getMyName() << ", ";
+		    os << "{ " << getMyName() << ", ";
 		    for(NodeMap::iterator it=nodeMap.begin(); it!=nodeMap.end(); ++it) {
-		        os << it->first << ": " << it->second <<", ";
+		        os << it->first << ": " << status_strs[it->second] <<", ";
 		    }
+		    os << "}";
 		    debug(os.str());
 		}
 
@@ -210,8 +238,10 @@ class DDash11p : public BaseWaveApplLayer {
 	        debug(os.str());
 		}
 
-		void debug(std::string msg) {
-		    //std::cout <<  simTime().dbl() << " (" << getGroupName() << ") " << getMyName() << ": " << msg << endl;
+		inline void debug(std::string msg) {
+		    if(debugging) {
+		        std::cout <<  simTime().dbl() << " " << getParentModule()->getFullPath() << "\t" << getGroupName() << "\t" << getMyName()  << '\t' << msg << endl;
+		    }
 		}
 };
 

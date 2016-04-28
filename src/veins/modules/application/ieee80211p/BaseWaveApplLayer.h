@@ -72,6 +72,7 @@ class BaseWaveApplLayer : public BaseApplLayer {
 		    PINGWAIT, PINGWAIT2, PINGREQWAIT
 		};
 
+		const char * status_strs[6] = {"Alive", "Susp", "Fail", "Ping Wait", "Ping Wait 2", "Ping Request Wait"};
 
 	protected:
 
@@ -101,7 +102,7 @@ class BaseWaveApplLayer : public BaseApplLayer {
 		Coord curPosition;
 		int mySCH;
 		int myId;
-        unsigned int uid;
+        unsigned int carUid;
 
 		cMessage* sendBeaconEvt;
 

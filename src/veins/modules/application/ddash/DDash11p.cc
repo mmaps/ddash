@@ -35,7 +35,7 @@ void DDash11p::initialize(int stage) {
         accidentDuration = par("accidentDuration");
         accidentCount = par("accidentCount");
         if (accidentCount > 0) {
-            debug("I'm gonna crash!");
+            //debug("I'm gonna crash!");
             simtime_t accidentStart = par("accidentStart");
             startAccidentMsg = new cMessage("scheduledAccident");
             startAccidentMsg->setKind(START_ACC);
@@ -44,8 +44,15 @@ void DDash11p::initialize(int stage) {
             scheduleAt(simTime() + accidentStart, startAccidentMsg);
         }
 
+        // Visual groups?
         drawGroups = par("drawGroups");
 
+        // Leader Election
+        leadName = getMyName();
+        leadUid = carUid;
+
+        // Debug
+        debugging = par("debugging");
     }
 }
 
@@ -68,7 +75,7 @@ void DDash11p::sendJoin(){
     wsm->setGroup(getGroupName().c_str());
 
     sendWSM(wsm);
-    if(!sentJoinDbgMsg)
+    if(1)
     {
         debug("JOIN(" + getMyName() +") to " + getGroupName());
         sentJoinDbgMsg = true;
@@ -107,9 +114,9 @@ void DDash11p::sendPing(const char* node){
 
     nodeMap[std::string(node)] = PINGWAIT;
 
-    //debug("PING " + std::string(node));
+    debug("PING " + std::string(node));
 
-    if(!critMsgs.empty()) {
+    if(isLeader() && !critMsgs.empty()) {
         for(NodeMap::iterator it=critMsgs.begin(); it!=critMsgs.end(); it++) {
             sendCritical(it->first);
         }
@@ -117,7 +124,7 @@ void DDash11p::sendPing(const char* node){
 }
 
 
-void DDash11p::sendPingReq(std::string nodeName){
+int DDash11p::sendPingReq(std::string nodeName){
     int kNodesMax = par("pingReqNum");
     int kNodes = 0;
     size_t nodeIdx;
@@ -128,7 +135,7 @@ void DDash11p::sendPingReq(std::string nodeName){
     if(numNodes - kNodesMax < 1) {
         os << "nodeMap.size: " << nodeMap.size() << " K: " << kNodesMax;
         debug("Not enough nodes for K " + os.str());
-        return;
+        return 0;
     }
 
     debug("Sending K nodes PINGREQ");
@@ -169,6 +176,8 @@ void DDash11p::sendPingReq(std::string nodeName){
 
         debug("Sent PINGREQ to " + middleNode + " for " + nodeName);
     }
+
+    return 1;
 }
 
 
@@ -180,7 +189,7 @@ void DDash11p::sendAck(std::string dst) {
     wsm->setWsmData("");
     wsm->setGroup(getGroupName().c_str());
     sendWSM(wsm);
-    //debug("send ack to " + dst);
+    debug("send ack to " + dst);
 }
 
 
@@ -192,7 +201,7 @@ void DDash11p::sendAck(std::string src, std::string dst, std::string data) {
     wsm->setWsmData(data.c_str());
     wsm->setGroup(getGroupName().c_str());
     sendWSM(wsm);
-    //debug("send ack to ping request to " + dst + " from " + data);
+    debug("send ack to ping request to " + dst + " from " + data);
 }
 
 
@@ -246,7 +255,7 @@ void DDash11p::sendWSM(WaveShortMessage* wsm) {
 void DDash11p::onPing(WaveShortMessage* wsm){
     if(isMyGroup(wsm) && isForMe(wsm)) {
         std::string sender = std::string(wsm->getSrc());
-        //debug("PING from " + sender);
+        debug("PING from " + sender);
         if(!isBroadcast(wsm)) {
             saveNodeInfo(wsm);
             sendAck(sender);
@@ -257,7 +266,7 @@ void DDash11p::onPing(WaveShortMessage* wsm){
 
 void DDash11p::onPingReq(WaveShortMessage* wsm) {
     if(isMyGroup(wsm) && isForMe(wsm)) {
-        //debug("PING REQ received from " + std::string(wsm->getSrc()) + " for " + std::string(wsm->getWsmData()));
+        debug("PING REQ received from " + std::string(wsm->getSrc()) + " for " + std::string(wsm->getWsmData()));
         saveNodeInfo(wsm);
         getUpdateMsgs(wsm);
         setTimer(wsm->getSrc(), wsm->getWsmData(), "");
@@ -271,7 +280,9 @@ void DDash11p::onAck(WaveShortMessage* wsm){
     std::string data = std::string(wsm->getWsmData());
 
     if(isMyGroup(wsm) && isForMe(wsm)) {
-        //debug("ACK from " + src + ", data: " + data);
+        debug("ACK from " + src + ", data: " + data);
+
+        getUpdateMsgs(wsm);
 
         if(!hasNode(src)) {
             addNode(wsm->getSenderPath(), src);
@@ -352,9 +363,13 @@ void DDash11p::handleSelfMsg(cMessage* msg) {
             if(nodeMap[dst] == PINGWAIT) {
                 // timeout msg from sender to middle node, asking ping-req help
                 debug("Timeout on PINGWAIT for " + dst);
-                setTimer(getMyName().c_str(), wsm->getDst(), "");
-                sendPingReq(dst);
-                nodeMap[dst] = PINGWAIT2;
+                if(hasNode(dst)) {
+                    // Must check, otherwise we are setting a blank node back!
+                    if(sendPingReq(dst)) {
+                        setTimer(getMyName().c_str(), wsm->getDst(), "");
+                        nodeMap[dst] = PINGWAIT2;
+                    }
+                }
             } else if(nodeMap[dst] == PINGWAIT2) {
                 // timeout msg from middle node to suspicious node
                 debug("Timeout on PINGWAIT2. Fail(" + dst + ")");
@@ -362,7 +377,9 @@ void DDash11p::handleSelfMsg(cMessage* msg) {
 
             } else if(nodeMap[dst] == PINGREQWAIT) {
                 debug("Timeout on PINGREQ. Resetting " + dst);
-                nodeMap[dst] = ALIVE;
+                if(hasNode(dst)) {
+                    nodeMap[dst] = ALIVE;
+                }
             }
             break;
 
@@ -384,47 +401,51 @@ void DDash11p::handleSelfMsg(cMessage* msg) {
                 DBG << "APP: Error: Got Self Message of unknown kind! Name: " << msg->getName() << endl;
             break;
     }
+    // Setup Leader
+    checkLeader();
 }
 
 
 void DDash11p::handlePositionUpdate(cObject* obj) {
     BaseWaveApplLayer::handlePositionUpdate(obj);
     cGate* cg;
+    bool connected = false;
+
     if(roadChanged()) {
-        debug("Leaving group " + groupName);
+        debug("Leaving group " + groupName + ". Join group " + mobility->getRoadId());
+
         groupName = mobility->getRoadId();
         leaveMsgs.clear();
         joinMsgs.clear();
         groupConns.clear();
+        nodeMap.clear();
+        assert(nodeMap.empty());
+        nodeList.clear();
+        lastIdx = 0;
 
-        std::cout << getMyName() << " clearing gIn. size: " << this->getParentModule()->gateSize("gIn");
         for(int i=0; i<this->getParentModule()->gateSize("gIn"); i++) {
-            cg = this->getParentModule()->gate("gIn", i);
-            if(cg) {
-                std::cout << ", " << i;
-                cg->disconnect();
+            if(this->getParentModule()->gate("gIn", i)->isConnectedOutside()) {
+                connected = true;
             }
         }
-        std::cout << "final size=" << this->getParentModule()->gateSize("gIn") << endl;
 
-        std::cout << getMyName() << " clearing gOut. size: " << this->getParentModule()->gateSize("gOut");
         for(int i=0; i<this->getParentModule()->gateSize("gOut"); i++) {
             cg = this->getParentModule()->gate("gOut", i);
             if(cg) {
-                std::cout << ", " << i;
                 cg->disconnect();
-                if(cg->getChannel()) {
-                    std::cout << " channel exists, ";
-                }
             }
         }
-        std::cout << "final size=" << this->getParentModule()->gateSize("gOut") << endl;
+        this->getParentModule()->setGateSize("gOut", 0);
+
+        if(!connected) {
+            this->getParentModule()->setGateSize("gIn", 0);
+        }
     }
 }
 
 
 void DDash11p::handleAccidentStart() {
-    debug("*** Start Accident ***");
+    //debug("*** Start Accident ***");
 
     setDisplay("r=16,red");
     traciVehicle->setSpeed(0);
@@ -434,7 +455,7 @@ void DDash11p::handleAccidentStart() {
 
 
 void DDash11p::handleAccidentStop() {
-    debug("*** End Accident ***");
+    //debug("*** End Accident ***");
     setDisplay("r=0,-");
     traciVehicle->setSpeed(-1);
 }
@@ -448,7 +469,7 @@ void DDash11p::handleAccidentStop() {
 void DDash11p::saveNodeInfo(WaveShortMessage *wsm) {
     const char* sender = wsm->getSrc();
     if(!hasNode(sender)) {
-        debug("Sender is new: " + std::string(sender));
+        //debug("Sender is new: " + std::string(sender));
         addNode(wsm->getSenderPath(), std::string(sender));
     }
 }
@@ -509,7 +530,7 @@ const char* DDash11p::getNextNode() {
         }
 
         count++;
-        dumpNode(next);
+        //dumpNode(next);
     } while(nodeMap[next] != ALIVE);
 
 
@@ -543,7 +564,7 @@ void DDash11p::removeFromList(std::string name) {
         lastIdx = 0;
     }
 
-    dumpList();
+    //dumpList();
 }
 
 // add join and leave membership list to message
@@ -586,12 +607,12 @@ void DDash11p::getUpdateMsgs(WaveShortMessage* wsm) {
 
         if(s.compare(getGroupName())) {
             if(critMsgs[s] == 1) {
-                debug("Accident(" + s + "). Re-routing...");
+                //debug("Accident(" + s + "). Re-routing...");
                 traciVehicle->changeRoute(s, 9999);
                 setDisplay("r=8,yellow");
             }
         } else {
-            debug("Accident(" + s + "). Unavoidable!");
+           //debug("Accident(" + s + "). Unavoidable!");
         }
 
 
@@ -603,7 +624,7 @@ void DDash11p::getUpdateMsgs(WaveShortMessage* wsm) {
         }
 
 
-        debug("Update= join(" + s + ")");
+        //debug("Update= join(" + s + ")");
         joinMsgs[s]++;
         if(joinMsgs[s] >= joinMax) {
             joinMaxes.push_back(s);
@@ -611,7 +632,7 @@ void DDash11p::getUpdateMsgs(WaveShortMessage* wsm) {
         }
 
         if(!isMyName(s) && !hasNode(s)) {
-             debug("New node " + s);
+             //debug("New node " + s);
              addNode(wsm->getSenderPath(), s.c_str());
         }
     }
@@ -621,7 +642,7 @@ void DDash11p::getUpdateMsgs(WaveShortMessage* wsm) {
             continue;
         }
         leaveMsgs[s]++;
-        debug("Update= leave(" + s + ")");
+        //debug("Update= leave(" + s + ")");
         if(leaveMsgs[s] >= leaveMax) {
             leaveMaxes.push_back(s);
             leaveMax = leaveMsgs[s];
@@ -640,6 +661,8 @@ void DDash11p::getUpdateMsgs(WaveShortMessage* wsm) {
         joinMsgs.erase(joinMaxes.back());
         joinMaxes.pop_back();
     }
+
+
 }
 
 
@@ -658,11 +681,11 @@ void DDash11p::connectGroupMember(const char* path, std::string name) {
     thisMod = this->getParentModule();
 
     if(thatMod) {
-        thatSize = thatMod->gateSize("gIn") + 1;
-        thisSize = thisMod->gateSize("gOut") + 1;
+        thatSize = findEmptyGate(thatMod, "gIn");
+        thisSize = findEmptyGate(thisMod, "gOut");
 
-        thatMod->setGateSize("gIn", thatSize);
-        thisMod->setGateSize("gOut", thisSize);
+        //thatMod->setGateSize("gIn", thatSize);
+        //thisMod->setGateSize("gOut", thisSize);
 
         thatGate = thatMod->gate("gIn", thatSize-1);
         thisGate = thisMod->gate("gOut", thisSize-1);
@@ -674,7 +697,7 @@ void DDash11p::connectGroupMember(const char* path, std::string name) {
         }
     }
 
-    //std::cout << getMyName() <<" Connecting gate num: "<< name << " "<<  thisSize-1 << " Total=" << thisSize << endl;
+    //std::cout << getMyName() <<" Connecting gate to: "<< name << " "<<  thisSize-1 << " Total=" << thisSize << endl;
 
     groupConns[name] = thisGate;
 }
@@ -695,5 +718,35 @@ void DDash11p::disconnectGroupMember(std::string name) {
             //std:: cout << it->first << ", ";
         //}
         //std::cout << endl;
+    }
+}
+
+void DDash11p::checkLeader() {
+    std::string old = leadName;
+    std::string candidate;
+    dumpMap();
+    // Get the highest ID node
+    if(!nodeMap.empty()) {
+        candidate = nodeMap.rbegin()->first;
+
+        if(getMyName().compare(candidate) < 0) {
+            //debug("Bigger candidate: " + candidate);
+            setDisplay("t=");
+            leadName = candidate;
+        } else if(!isLeader()) {
+            //debug("I'm the biggest!");
+            setDisplay("t=LEADER;");
+            leadName = getMyName();
+        }
+    } else {
+        if(!isLeader()) {
+            //debug("I'm the only one!");
+            setDisplay("t=LEADER;");
+            leadName = getMyName();
+        }
+    }
+
+    if(old.compare(leadName)) {
+        debug("New leader: " + leadName);
     }
 }

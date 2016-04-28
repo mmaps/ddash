@@ -12,3 +12,146 @@ Tcl error: moduleinspector.cc#631: ptr0x345a940 not found
 "ModuleInspector:drawNextEventMarker .inspector0.c ptr0x345a940 1"
 
 
+----------------------------------------------------------------------
+
+
+Tcl error: moduleinspector.cc#499: invalid bareword "m"
+in expression "1/m*1";
+should be "$m" or "{m}" or "m(...)" or ...
+    (parsing expression "1/m*1")
+    invoked from within
+"expr $scaling*$zoomfactor"
+    (procedure "ModuleInspector:drawSubmodule" line 8)
+    invoked from within
+"ModuleInspector:drawSubmodule .network.c ptr0x43b5380 50 0 {obstacles} {p=50,0;i=misc/town} {1/m} 0"
+
+
+Tcl error: moduleinspector.cc#499: invalid bareword "m"
+in expression "1/m*1";
+should be "$m" or "{m}" or "m(...)" or ...
+    (parsing expression "1/m*1")
+    invoked from within
+"expr $scaling*$zoomfactor"
+    (procedure "ModuleInspector:drawSubmodule" line 8)
+    invoked from within
+"ModuleInspector:drawSubmodule .network.c ptr0x43ba780 100 0 {annotations} {p=100,0;i=msg/paperclip} {1/m} 0"
+
+
+Tcl error: moduleinspector.cc#499: invalid bareword "m"
+in expression "1/m*1";
+should be "$m" or "{m}" or "m(...)" or ...
+    (parsing expression "1/m*1")
+    invoked from within
+"expr $scaling*$zoomfactor"
+    (procedure "ModuleInspector:drawSubmodule" line 8)
+    invoked from within
+"ModuleInspector:drawSubmodule .network.c ptr0x43ba100 200 0 {connectionManager} {p=200,0;i=abstract/multicast} {1/m} 0"
+
+
+Tcl error: moduleinspector.cc#499: invalid bareword "m"
+in expression "1/m*1";
+should be "$m" or "{m}" or "m(...)" or ...
+    (parsing expression "1/m*1")
+    invoked from within
+"expr $scaling*$zoomfactor"
+    (procedure "ModuleInspector:drawSubmodule" line 8)
+    invoked from within
+"ModuleInspector:drawSubmodule .network.c ptr0x43b7a30 0 0 {world} {p=0,0;i=misc/globe} {1/m} 0"
+
+
+Tcl error: moduleinspector.cc#499: invalid bareword "m"
+in expression "1/m*1";
+should be "$m" or "{m}" or "m(...)" or ...
+    (parsing expression "1/m*1")
+    invoked from within
+"expr $scaling*$zoomfactor"
+    (procedure "ModuleInspector:drawSubmodule" line 8)
+    invoked from within
+"ModuleInspector:drawSubmodule .network.c ptr0x43b9400 250 0 {manager} {p=250,0;i=block/network2} {1/m} 0"
+
+
+Tcl error: moduleinspector.cc#511: invalid bareword "m"
+in expression "1/m*1";
+should be "$m" or "{m}" or "m(...)" or ...
+    (parsing expression "1/m*1")
+    invoked from within
+"expr $scaling*$zoomfactor"
+    (procedure "ModuleInspector:drawEnclosingModule" line 8)
+    invoked from within
+"ModuleInspector:drawEnclosingModule .network.c ptr0x243e0c0 {DDashScenario} {bgb=$playgroundSizeX,$playgroundSizeY;bgi=cmu_map,c;bgs=1/m} {1/m} "
+
+
+Tcl error: moduleinspector.cc#499: invalid bareword "m"
+in expression "1/m*1.6900000000000002";
+should be "$m" or "{m}" or "m(...)" or ...
+    (parsing expression "1/m*1.6900000000000002")
+    invoked from within
+"expr $scaling*$zoomfactor"
+    (procedure "ModuleInspector:drawSubmodule" line 8)
+    invoked from within
+"ModuleInspector:drawSubmodule .network.c ptr0x43b5380 50 0 {obstacles} {p=50,0;i=misc/town} {1/m} 0"
+
+
+Tcl error: moduleinspector.cc#499: invalid bareword "m"
+in expression "1/m*1.6900000000000002";
+should be "$m" or "{m}" or "m(...)" or ...
+    (parsing expression "1/m*1.6900000000000002")
+    invoked from within
+"expr $scaling*$zoomfactor"
+    (procedure "ModuleInspector:drawSubmodule" line 8)
+    invoked from within
+"ModuleInspector:drawSubmodule .network.c ptr0x43ba780 100 0 {annotations} {p=100,0;i=msg/paperclip} {1/m} 0"
+
+
+Tcl error: moduleinspector.cc#499: invalid bareword "m"
+in expression "1/m*1.6900000000000002";
+should be "$m" or "{m}" or "m(...)" or ...
+    (parsing expression "1/m*1.6900000000000002")
+    invoked from within
+"expr $scaling*$zoomfactor"
+    (procedure "ModuleInspector:drawSubmodule" line 8)
+    invoked from within
+"ModuleInspector:drawSubmodule .network.c ptr0x43ba100 200 0 {connectionManager} {p=200,0;i=abstract/multicast} {1/m} 0"
+
+
+Tcl error: moduleinspector.cc#499: invalid bareword "m"
+in expression "1/m*1.6900000000000002";
+should be "$m" or "{m}" or "m(...)" or ...
+    (parsing expression "1/m*1.6900000000000002")
+    invoked from within
+"expr $scaling*$zoomfactor"
+    (procedure "ModuleInspector:drawSubmodule" line 8)
+    invoked from within
+"ModuleInspector:drawSubmodule .network.c ptr0x43b7a30 0 0 {world} {p=0,0;i=misc/globe} {1/m} 0"
+
+
+Tcl error: moduleinspector.cc#499: invalid bareword "m"
+in expression "1/m*1.6900000000000002";
+should be "$m" or "{m}" or "m(...)" or ...
+    (parsing expression "1/m*1.6900000000000002")
+    invoked from within
+"expr $scaling*$zoomfactor"
+    (procedure "ModuleInspector:drawSubmodule" line 8)
+    invoked from within
+"ModuleInspector:drawSubmodule .network.c ptr0x43b9400 250 0 {manager} {p=250,0;i=block/network2} {1/m} 0"
+
+
+Tcl error: moduleinspector.cc#511: invalid bareword "m"
+in expression "1/m*1.6900000000000002";
+should be "$m" or "{m}" or "m(...)" or ...
+    (parsing expression "1/m*1.6900000000000002")
+    invoked from within
+"expr $scaling*$zoomfactor"
+    (procedure "ModuleInspector:drawEnclosingModule" line 8)
+    invoked from within
+"ModuleInspector:drawEnclosingModule .network.c ptr0x243e0c0 {DDashScenario} {bgb=$playgroundSizeX,$playgroundSizeY;bgi=cmu_map,c;bgs=1/m} {1/m} "
+
+
+Tcl error: tkenv.cc#288: `1/m' is not a valid double value
+    while executing
+"opp_newrun $configname $runnumber"
+    (procedure "startupCommands" line 22)
+    invoked from within
+"startupCommands"
+
+

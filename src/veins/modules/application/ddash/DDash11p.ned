@@ -33,4 +33,5 @@ simple DDash11p extends BaseWaveApplLayer
     volatile double accidentDuration @unit("s") = default(uniform(30s,60s));  // duration of accident
     volatile double accidentInterval @unit("s") = default(uniform(30s,60s));  // time between accidents
     bool drawGroups = default(false); // Whether or not to draw the group formations
+    bool debugging = default(false);
 }

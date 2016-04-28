@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!-- generated on Wed 20 Apr 2016 09:22:10 PM EDT by Netedit Version 0.25.0
+<!-- generated on Wed 27 Apr 2016 04:56:38 PM EDT by Netedit Version 0.25.0
 <?xml version="1.0" encoding="UTF-8"?>
 
 <configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/netedit.exeConfiguration.xsd">
 
     <input>
-        <sumo-net-file value="cmu.net.xml"/>
+        <sumo-net-file value="/home/veins/veins-4.3/ddash/cmu.net.xml"/>
     </input>
 
     <output>
-        <output-file value="cmu.net.xml"/>
+        <output-file value="/home/veins/veins-4.3/ddash/cmu2.net.xml"/>
     </output>
 
     <processing>
@@ -20,19 +20,13 @@
         <junctions.corner-detail value="0"/>
     </processing>
 
-    <visualisation>
-        <registry-viewport value="true"/>
-    </visualisation>
-
 </configuration>
 -->
 
 <net version="0.25" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/net_file.xsd">
-<location netOffset="-588414.20,-4477276.14" convBoundary="0.00,0.00,3102.56,1771.49" origBoundary="-79.957464,40.440934,-79.920715,40.457139" projParameter="+proj=utm +zone=17 +ellps=WGS84 +datum=WGS84 +units=m +no_defs"/>
-<!--
+
     <location netOffset="-588414.20,-4477276.14" convBoundary="0.00,0.00,3102.56,1771.49" origBoundary="-79.957464,40.440934,-79.920715,40.457139" projParameter="+proj=utm +zone=17 +ellps=WGS84 +datum=WGS84 +units=m +no_defs"/>
-   <location netOffset="0.00,0.00" convBoundary="644465.09,5491786.25,647071.55,5494795.98" origBoundary="10.998195,49.560791,11.034775,49.587847" projParameter="+proj=utm +zone=32 +ellps=WGS84 +datum=WGS84 +units=m +no_defs"/>
-   -->
+
     <edge id=":104202187_0" function="internal">
         <lane id=":104202187_0_0" index="0" speed="13.89" length="6.35" shape="1423.41,323.84 1429.35,322.55"/>
         <lane id=":104202187_0_1" index="1" speed="13.89" length="6.35" shape="1424.07,327.07 1430.06,325.77"/>

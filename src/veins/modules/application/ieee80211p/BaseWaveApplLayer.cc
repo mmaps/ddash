@@ -55,7 +55,7 @@ void BaseWaveApplLayer::initialize(int stage) {
 		if (sendBeacons) {
 			scheduleAt(simTime() + offSet, sendBeaconEvt);
 		}
-        uid = rand();
+        carUid = rand();
 
 	}
 }
@@ -79,7 +79,7 @@ WaveShortMessage*  BaseWaveApplLayer::prepareWSM(std::string name, int lengthBit
 	wsm->setSerial(serial);
 
 	// Used for leaders
-	wsm->setSrcUid(uid);
+	wsm->setSrcUid(carUid);
 
 	// Used for groups
 	wsm->setSenderPath(this->getFullPath().c_str());

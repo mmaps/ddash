@@ -1,4 +1,5 @@
 # Partial OMNeT++/Tkenv config file -- see $HOME/.tkenvrc as well
 config default-configname	{debug}
 config default-runnumber	{0}
+inspector {component types} cRegistrationList {} 1 967x856+391+188:normal
 
