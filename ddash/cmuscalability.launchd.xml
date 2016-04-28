@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<!-- debug config -->
+<launch>
+	
+	<copy file="cmu.net.xml" />
+	<copy file="cmuscalability.rou.xml" />
+	<copy file="cmu.poly.xml" />
+	<copy file="cmuscalability.sumo.cfg" type="config" />
+
+</launch>
+
+ 

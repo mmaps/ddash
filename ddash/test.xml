@@ -21,18 +21,18 @@
                 <entry color="0,80,180" name="selected"/>
             </colorScheme>
             <colorScheme name="by permission code" interpolated="1">
-                <entry color="240,240,240" threshold="0.00" name="nobody"/>
-                <entry color="10,10,10" threshold="32.00" name="passenger"/>
-                <entry color="166,147,26" threshold="128.00" name="taxi"/>
-                <entry color="40,100,40" threshold="256.00" name="bus"/>
-                <entry color="192,66,44" threshold="524288.00" name="bicycle"/>
-                <entry color="grey" threshold="1048576.00" name="pedestrian"/>
-                <entry color="80,80,80" threshold="1049600.00" name="pedestrian_delivery"/>
-                <entry color="150,200,200" threshold="4194304.00" name="waterway"/>
-                <entry color="255,206,0" threshold="27402239.00" name="motorway"/>
-                <entry color="black" threshold="28188671.00" name="disallow_pedestrian"/>
-                <entry color="black" threshold="29237247.00" name="normal_road"/>
-                <entry color="green" threshold="33554431.00" name="all"/>
+                <entry color="240,240,240" threshold="0.00"/>
+                <entry color="10,10,10" threshold="32.00"/>
+                <entry color="166,147,26" threshold="128.00"/>
+                <entry color="40,100,40" threshold="256.00"/>
+                <entry color="192,66,44" threshold="524288.00"/>
+                <entry color="grey" threshold="1048576.00"/>
+                <entry color="80,80,80" threshold="1049600.00"/>
+                <entry color="150,200,200" threshold="4194304.00"/>
+                <entry color="255,206,0" threshold="27402239.00"/>
+                <entry color="black" threshold="28188671.00"/>
+                <entry color="black" threshold="29237247.00"/>
+                <entry color="green" threshold="33554431.00"/>
             </colorScheme>
             <colorScheme name="by allowed speed (lanewise)" interpolated="1">
                 <entry color="red" threshold="0.00"/>
@@ -66,20 +66,20 @@
                 <entry color="red" threshold="0.27"/>
             </colorScheme>
             <colorScheme name="by CO emissions" interpolated="1">
-                <entry color="green" threshold="0.00"/>
                 <entry color="red" threshold="0.00"/>
+                <entry color="green" threshold="0.00"/>
             </colorScheme>
             <colorScheme name="by PMx emissions" interpolated="1">
-                <entry color="green" threshold="0.00"/>
                 <entry color="red" threshold="0.00"/>
+                <entry color="green" threshold="0.00"/>
             </colorScheme>
             <colorScheme name="by NOx emissions" interpolated="1">
-                <entry color="green" threshold="0.00"/>
                 <entry color="red" threshold="0.00"/>
+                <entry color="green" threshold="0.00"/>
             </colorScheme>
             <colorScheme name="by HC emissions" interpolated="1">
-                <entry color="green" threshold="0.00"/>
                 <entry color="red" threshold="0.00"/>
+                <entry color="green" threshold="0.00"/>
             </colorScheme>
             <colorScheme name="by fuel consumption" interpolated="1">
                 <entry color="green" threshold="0.00"/>
@@ -194,20 +194,20 @@
                 <entry color="10.00" threshold="0.27"/>
             </scalingScheme>
             <scalingScheme name="by CO emissions" interpolated="1">
-                <entry color="0.00" threshold="0.00"/>
                 <entry color="10.00" threshold="0.00"/>
+                <entry color="0.00" threshold="0.00"/>
             </scalingScheme>
             <scalingScheme name="by PMx emissions" interpolated="1">
-                <entry color="0.00" threshold="0.00"/>
                 <entry color="10.00" threshold="0.00"/>
+                <entry color="0.00" threshold="0.00"/>
             </scalingScheme>
             <scalingScheme name="by NOx emissions" interpolated="1">
-                <entry color="0.00" threshold="0.00"/>
                 <entry color="10.00" threshold="0.00"/>
+                <entry color="0.00" threshold="0.00"/>
             </scalingScheme>
             <scalingScheme name="by HC emissions" interpolated="1">
-                <entry color="0.00" threshold="0.00"/>
                 <entry color="10.00" threshold="0.00"/>
+                <entry color="0.00" threshold="0.00"/>
             </scalingScheme>
             <scalingScheme name="by fuel consumption" interpolated="1">
                 <entry color="0.00" threshold="0.00"/>
@@ -250,10 +250,10 @@
                 <entry color="10.00" threshold="2.00"/>
             </scalingScheme>
         </edges>
-        <vehicles imgFile="/home/veins/Downloads/mach5top.bmp" vehicleMode="0" vehicleQuality="0" vehicle_minSize="1.00" vehicle_exaggeration="1.00" vehicle_constantSize="0" showBlinker="1"
+        <vehicles vehicleMode="0" vehicleQuality="3" vehicle_minSize="1.00" vehicle_exaggeration="1.00" vehicle_constantSize="1" showBlinker="1"
                   vehicleName_show="0" vehicleName_size="50.00" vehicleName_color="204,153,0">
             <colorScheme name="given vehicle/type/route color">
-                <entry color="yellow"/>
+                <entry color="white"/>
             </colorScheme>
             <colorScheme name="uniform">
                 <entry color="yellow"/>
@@ -294,9 +294,9 @@
             <colorScheme name="by time since lane change" interpolated="1">
                 <entry color="189,189,179" threshold="-180.00"/>
                 <entry color="yellow" threshold="-20.00"/>
-                <entry color="red" threshold="-0.00"/>
-                <entry color="179,179,179" threshold="0.00" name="0"/>
                 <entry color="blue" threshold="0.00"/>
+                <entry color="179,179,179" threshold="0.00"/>
+                <entry color="red" threshold="-0.00"/>
                 <entry color="cyan" threshold="20.00"/>
                 <entry color="179,189,189" threshold="180.00"/>
             </colorScheme>
@@ -346,22 +346,22 @@
                 <entry color="0,102,204" name="selected"/>
             </colorScheme>
             <colorScheme name="by offset from best lane" interpolated="1">
-                <entry color="red" threshold="-3.00" name="-3"/>
-                <entry color="yellow" threshold="-1.00" name="-1"/>
-                <entry color="179,179,179" threshold="0.00" name="0"/>
-                <entry color="cyan" threshold="1.00" name="1"/>
-                <entry color="blue" threshold="3.00" name="3"/>
+                <entry color="red" threshold="-3.00"/>
+                <entry color="yellow" threshold="-1.00"/>
+                <entry color="179,179,179" threshold="0.00"/>
+                <entry color="cyan" threshold="1.00"/>
+                <entry color="blue" threshold="3.00"/>
             </colorScheme>
             <colorScheme name="by acceleration" interpolated="1">
                 <entry color="red" threshold="-4.50"/>
                 <entry color="yellow" threshold="-0.10"/>
-                <entry color="179,179,179" threshold="0.00" name="0"/>
+                <entry color="179,179,179" threshold="0.00"/>
                 <entry color="cyan" threshold="0.10"/>
                 <entry color="blue" threshold="2.60"/>
             </colorScheme>
             <colorScheme name="by time gap" interpolated="1">
                 <entry color="179,179,179" threshold="-1.00"/>
-                <entry color="yellow" threshold="0.00" name="0"/>
+                <entry color="yellow" threshold="0.00"/>
                 <entry color="cyan" threshold="1.00"/>
                 <entry color="blue" threshold="2.00"/>
             </colorScheme>
@@ -498,6 +498,7 @@
         <polys poly_minSize="0.00" poly_exaggeration="1.00" poly_constantSize="0" polyName_show="0" polyName_size="50.00" polyName_color="255,0,128" polyType_show="0" polyType_size="50.00" polyType_color="255,0,128"/>
         <legend showSizeLegend="1"/>
     </scheme>
-    <viewport zoom="259.37" x="1041.89" y="690.07"/>
+    <viewport zoom="368.09" x="873.90" y="566.91"/>
+    <delay value="50.00"/>
     <decal filename="/home/veins/Pictures/map.bmp" centerX="1235.00" centerY="890.00" centerZ="0.00" width="4470.00" height="2200.00" altitude="0.00" rotation="0.00" tilt="0.00" roll="0.00" layer="0.00"/>
 </viewsettings>

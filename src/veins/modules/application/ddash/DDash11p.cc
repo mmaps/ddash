@@ -421,7 +421,11 @@ void DDash11p::handlePositionUpdate(cObject* obj) {
 
         groupName = mobility->getRoadId();
         leaveMsgs.clear();
+        leaveMaxes.clear();
+        leaveMax = -1;
         joinMsgs.clear();
+        joinMaxes.clear();
+        joinMax = -1;
         groupConns.clear();
         nodeMap.clear();
         assert(nodeMap.empty());
