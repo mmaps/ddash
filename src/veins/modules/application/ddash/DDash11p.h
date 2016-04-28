@@ -49,6 +49,9 @@ class DDash11p : public BaseWaveApplLayer {
 		bool flashOn;
 		bool sentJoinDbgMsg = false;
 		bool sentNoOneDbgMsg = false;
+		bool scheduledClear = false;
+		bool cleared = false;
+
 		double timeout;
 		double period;
         cMessage *heartbeatMsg;

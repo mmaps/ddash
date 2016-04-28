@@ -410,15 +410,30 @@ void DDash11p::handleSelfMsg(cMessage* msg) {
             break;
 
         case START_ACC:
-            handleAccidentStart();
-            scheduleAt(simTime() + accidentDuration, stopAccidentMsg);
+
+            if(!cleared) {
+                handleAccidentStart();
+
+                debug("Not cleared");
+                scheduleAt(simTime() + period, startAccidentMsg);
+            }
+
+            if(!scheduledClear) {
+                debug("schedule clear");
+                scheduleAt(simTime() + accidentDuration, stopAccidentMsg);
+                scheduledClear = true;
+            }
+
             accidentCount--;
             break;
 
         case STOP_ACC:
+            debug("handling clear");
             handleAccidentStop();
+            cleared = true;
             if(accidentCount > 0) {
                 scheduleAt(simTime() + accidentInterval, startAccidentMsg);
+                scheduledClear = false;
             }
             break;
 
@@ -483,7 +498,7 @@ void DDash11p::handlePositionUpdate(cObject* obj) {
 
 
 void DDash11p::handleAccidentStart() {
-    //debug("*** Start Accident ***");
+    debug("*** Start Accident ***");
 
     setDisplay("r=16,red");
     traciVehicle->setSpeed(0);
@@ -493,7 +508,7 @@ void DDash11p::handleAccidentStart() {
 
 
 void DDash11p::handleAccidentStop() {
-    //debug("*** End Accident ***");
+    debug("*** End Accident ***");
     setDisplay("r=0,-");
     traciVehicle->setSpeed(-1);
 
