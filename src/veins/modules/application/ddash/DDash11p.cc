@@ -256,7 +256,7 @@ void DDash11p::sendWSM(WaveShortMessage* wsm) {
 void DDash11p::onPing(WaveShortMessage* wsm){
     if(isMyGroup(wsm) && isForMe(wsm)) {
         std::string sender = std::string(wsm->getSrc());
-        debug("PING from " + sender);
+        //debug("PING from " + sender);
         if(!isBroadcast(wsm)) {
             saveNodeInfo(wsm);
             sendAck(sender);
@@ -267,7 +267,7 @@ void DDash11p::onPing(WaveShortMessage* wsm){
 
 void DDash11p::onPingReq(WaveShortMessage* wsm) {
     if(isMyGroup(wsm) && isForMe(wsm)) {
-        debug("PING REQ received from " + std::string(wsm->getSrc()) + " for " + std::string(wsm->getWsmData()));
+        //debug("PING REQ received from " + std::string(wsm->getSrc()) + " for " + std::string(wsm->getWsmData()));
         saveNodeInfo(wsm);
         getUpdateMsgs(wsm);
         setTimer(wsm->getSrc(), wsm->getWsmData(), "");
@@ -412,6 +412,10 @@ void DDash11p::handlePositionUpdate(cObject* obj) {
     cGate* cg;
     bool connected = false;
 
+    if(isLeader()) {
+        getDisplayString().setTagArg("t", 0, "LEADER");
+    }
+
     if(roadChanged()) {
         debug("Leaving group " + groupName + ". Join group " + mobility->getRoadId());
 
@@ -423,6 +427,7 @@ void DDash11p::handlePositionUpdate(cObject* obj) {
         assert(nodeMap.empty());
         nodeList.clear();
         lastIdx = 0;
+        leadName = std::string("");
 
         for(int i=0; i<this->getParentModule()->gateSize("gIn"); i++) {
             if(this->getParentModule()->gate("gIn", i)->isConnectedOutside()) {
@@ -490,7 +495,7 @@ void DDash11p::addNode(const char* path, std::string name) {
         return;
     }
 
-    debug("addNode " + std::string(name));
+    //debug("addNode " + std::string(name));
 
     nodeList.push_back(std::string(name));
 
@@ -724,24 +729,25 @@ void DDash11p::disconnectGroupMember(std::string name) {
 void DDash11p::checkLeader() {
     std::string old = leadName;
     std::string candidate;
-    dumpMap();
+
     // Get the highest ID node
     if(!nodeMap.empty()) {
         candidate = nodeMap.rbegin()->first;
 
         if(getMyName().compare(candidate) < 0) {
-            //debug("Bigger candidate: " + candidate);
-            setDisplay("t=");
+            debug("Not leader");
+            findHost()->getDisplayString().removeTag("i");
+            findHost()->getDisplayString().removeTag("is");
             leadName = candidate;
         } else if(!isLeader()) {
-            //debug("I'm the biggest!");
-            setDisplay("t=LEADER;");
+            debug("Set leader string");
+            setDisplay("i=status/checkmark;is=vs;");
             leadName = getMyName();
         }
     } else {
         if(!isLeader()) {
-            //debug("I'm the only one!");
-            setDisplay("t=LEADER;");
+            debug("Set leader string, solo");
+            setDisplay("i=status/checkmark;is=vs;");
             leadName = getMyName();
         }
     }
