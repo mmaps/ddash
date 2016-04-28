@@ -9,6 +9,7 @@
 #include <utility>
 #include <list>
 #include <string.h>
+#include <queue>
 
 using Veins::TraCIMobility;
 using Veins::TraCICommandInterface;
@@ -20,6 +21,14 @@ typedef std::list<std::string> NodeMsgs;
 
 #define LRU_SIZE 10
 #define CRIT_RESEND_NUM 1000
+
+class Comparator {
+public:
+    bool operator()(std::pair<int, std::string> a, std::pair<int, std::string> b) {
+        return a.first > b.first;
+    }
+};
+typedef std::priority_queue<std::pair<int,std::string>, std::deque<std::pair<int,std::string>>, Comparator> MsgHeap;
 
 class DDash11p : public BaseWaveApplLayer {
 	public:
@@ -55,11 +64,14 @@ class DDash11p : public BaseWaveApplLayer {
         NodeMap joinMsgs;
         int joinMax = -1;
         NodeList joinMaxes;
+        MsgHeap joinHeap;
+        MsgHeap leaveHeap;
         NodeMap leaveMsgs;
         int leaveMax = -1;
         NodeList leaveMaxes;
         NodeList nodeList;
         NodeMap critMsgs;
+        NodeMap clearMsgs;
         std::map<std::string, std::map<std::string, cMessage*>> pingReqTimers;
         std::map<std::string, std::string> pingReqSent;
         unsigned int lastIdx;
@@ -81,6 +93,7 @@ class DDash11p : public BaseWaveApplLayer {
 
 		virtual void sendJoin();
 		virtual void sendCritical(std::string roadId);
+		virtual void sendClear(std::string roadId);
 		virtual void sendPing(const char* nodeName);
 		virtual int sendPingReq(std::string suspciousNode);
 		virtual void sendFail(std::string failedNode);
@@ -99,6 +112,7 @@ class DDash11p : public BaseWaveApplLayer {
 		void removeFromList(std::string name);
 		void setUpdateMsgs(WaveShortMessage *wsm);
 		void setCriticalMsgs(WaveShortMessage *wsm);
+        void setClearMsgs(WaveShortMessage *wsm);
 		void getUpdateMsgs(WaveShortMessage *wsm);
 		void handleAccidentStart();
 		void handleAccidentStop();

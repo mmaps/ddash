@@ -70,6 +70,7 @@ packet WaveShortMessage {
 	NodeMsgs joinMsgs;
 	NodeMsgs leaveMsgs;
 	NodeMsgs criticalMsgs;
+	NodeMsgs clearMsgs;
 	
 	//Used to draw groups
 	string senderPath;

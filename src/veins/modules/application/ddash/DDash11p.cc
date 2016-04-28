@@ -75,7 +75,7 @@ void DDash11p::sendJoin(){
     wsm->setGroup(getGroupName().c_str());
 
     sendWSM(wsm);
-    if(1)
+    if(!sentJoinDbgMsg)
     {
         debug("JOIN(" + getMyName() +") to " + getGroupName());
         sentJoinDbgMsg = true;
@@ -87,10 +87,35 @@ void DDash11p::sendCritical(std::string roadId) {
     WaveShortMessage *wsm;
     critMsgs[roadId]++;
 
+    if(hasNode(clearMsgs, roadId)) {
+        clearMsgs.erase(roadId);
+    }
+
     wsm = prepareWSM("ACCIDENT", beaconLengthBits, type_CCH, beaconPriority, 0, -1);
     wsm->setKind(PING);
     wsm->setSrc(getMyName().c_str());
     setCriticalMsgs(wsm);
+
+    // Broadcast
+    wsm->setDst("*");
+    wsm->setGroup("*");
+
+    sendWSM(wsm);
+}
+
+
+void DDash11p::sendClear(std::string roadId) {
+    WaveShortMessage *wsm;
+    clearMsgs[roadId]++;
+
+    if(hasNode(critMsgs, roadId)) {
+        critMsgs.erase(roadId);
+    }
+
+    wsm = prepareWSM("CLEAR", beaconLengthBits, type_CCH, beaconPriority, 0, -1);
+    wsm->setKind(PING);
+    wsm->setSrc(getMyName().c_str());
+    setClearMsgs(wsm);
 
     // Broadcast
     wsm->setDst("*");
@@ -433,6 +458,9 @@ void DDash11p::handlePositionUpdate(cObject* obj) {
         lastIdx = 0;
         leadName = std::string("");
 
+        while(!leaveHeap.empty()) { leaveHeap.pop(); }
+        while(!joinHeap.empty()) {joinHeap.pop();}
+
         for(int i=0; i<this->getParentModule()->gateSize("gIn"); i++) {
             if(this->getParentModule()->gate("gIn", i)->isConnectedOutside()) {
                 connected = true;
@@ -468,6 +496,8 @@ void DDash11p::handleAccidentStop() {
     //debug("*** End Accident ***");
     setDisplay("r=0,-");
     traciVehicle->setSpeed(-1);
+
+    sendClear(getGroupName());
 }
 
 
@@ -605,27 +635,41 @@ void DDash11p::setCriticalMsgs(WaveShortMessage* wsm) {
     wsm->setCriticalMsgs(msgs);
 }
 
+
+void DDash11p::setClearMsgs(WaveShortMessage* wsm) {
+    NodeMsgs msgs;
+    for(NodeMap::iterator it=clearMsgs.begin(); it!=clearMsgs.end(); it++) {
+        msgs.push_front(it->first);
+    }
+    wsm->setClearMsgs(msgs);
+}
+
+
 // update join and leave membership list through receiving message
 void DDash11p::getUpdateMsgs(WaveShortMessage* wsm) {
     NodeMsgs joins = wsm->getJoinMsgs();
     NodeMsgs leaves = wsm->getLeaveMsgs();
     NodeMsgs crits = wsm->getCriticalMsgs();
+    NodeMsgs clears = wsm->getClearMsgs();
 
     for(std::string s: crits) {
-
         critMsgs[s]++;
 
         if(s.compare(getGroupName())) {
             if(critMsgs[s] == 1) {
                 //debug("Accident(" + s + "). Re-routing...");
                 traciVehicle->changeRoute(s, 9999);
-                setDisplay("r=8,yellow");
+                setDisplay("r=12,yellow");
             }
         } else {
            //debug("Accident(" + s + "). Unavoidable!");
         }
+    }
 
-
+    for(std::string s: clears) {
+        clearMsgs[s]++;
+        critMsgs.erase(s);
+        setDisplay("r=0");
     }
 
     for(std::string s: joins) {
@@ -635,10 +679,8 @@ void DDash11p::getUpdateMsgs(WaveShortMessage* wsm) {
 
         //debug("Update= join(" + s + ")");
         joinMsgs[s]++;
-        if(joinMsgs[s] >= joinMax) {
-            joinMaxes.push_back(s);
-            joinMax = joinMsgs[s];
-        }
+
+        joinHeap.push(std::pair<int, std::string>(joinMsgs[s], s));
 
         if(!isMyName(s) && !hasNode(s)) {
              //debug("New node " + s);
@@ -651,24 +693,33 @@ void DDash11p::getUpdateMsgs(WaveShortMessage* wsm) {
             continue;
         }
         leaveMsgs[s]++;
+
+        leaveHeap.push(std::pair<int, std::string>(leaveMsgs[s], s));
+
         //debug("Update= leave(" + s + ")");
-        if(leaveMsgs[s] >= leaveMax) {
-            leaveMaxes.push_back(s);
-            leaveMax = leaveMsgs[s];
-        }
+
         removeFromList(s);
         nodeMap.erase(s);
         disconnectGroupMember(s);
     }
 
-    if(leaveMsgs.size() > LRU_SIZE) {
+    while(leaveMsgs.size() > LRU_SIZE) {
+        /*
         leaveMsgs.erase(leaveMaxes.back());
         leaveMaxes.pop_back();
+        */
+        leaveMsgs.erase(leaveHeap.top().second);
+        leaveHeap.pop();
     }
 
-    if(joinMsgs.size() > LRU_SIZE) {
+    while(joinMsgs.size() > LRU_SIZE) {
+        /*
         joinMsgs.erase(joinMaxes.back());
         joinMaxes.pop_back();
+        joinMax = joinMsgs[joinMaxes.back()];
+        */
+        joinMsgs.erase(joinHeap.top().second);
+        joinHeap.pop();
     }
 
 
@@ -692,9 +743,6 @@ void DDash11p::connectGroupMember(const char* path, std::string name) {
     if(thatMod) {
         thatSize = findEmptyGate(thatMod, "gIn");
         thisSize = findEmptyGate(thisMod, "gOut");
-
-        //thatMod->setGateSize("gIn", thatSize);
-        //thisMod->setGateSize("gOut", thisSize);
 
         thatGate = thatMod->gate("gIn", thatSize-1);
         thisGate = thisMod->gate("gOut", thisSize-1);
@@ -720,13 +768,6 @@ void DDash11p::disconnectGroupMember(std::string name) {
         groupConns[name]->disconnect();
         //std::cout <<endl;
         groupConns.erase(name);
-    } else {
-        //std::cout << getMyName() << " not connected to " << name << endl;
-
-        //for(std::map<std::string, cGate*>::iterator it=groupConns.begin(); it!=groupConns.end(); it++) {
-            //std:: cout << it->first << ", ";
-        //}
-        //std::cout << endl;
     }
 }
 
